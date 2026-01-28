@@ -1,0 +1,1 @@
+qemu-system-i386 -kernel Kernel_x86.bin #-d cpu,guest_errors -no-reboot

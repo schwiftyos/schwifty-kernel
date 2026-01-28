@@ -1,0 +1,15 @@
+.DS_Store
+/.build
+/Packages
+xcuserdata/
+DerivedData/
+.swiftpm
+.vscode
+.netrc
+Package.resolved
+boot_x86.o
+Kernel_x86.o
+Kernel_x86.bin
+Kernel.o
+generatedAssembly.asm
+generatedByCompiler.txt
