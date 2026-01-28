@@ -52,6 +52,35 @@ inb:
     in %dx, %al
     ret
 
+# GS
+.global load_gs
+load_gs:
+    mov 4(%esp), %ax # load the GDT Selector (e.g., 0x18)
+    mov %ax, %gs
+    ret
+
+# Context switch
+.global switch_threads
+switch_threads:
+    # save current thread's state
+    push %ebp
+    push %ebx
+    push %esi
+    push %edi
+
+    # switch stacks
+    mov 20(%esp), %eax # pointer to old_stack_ptr
+    mov %esp, (%eax)   # save current ESP
+    mov 24(%esp), %eax # new stack pointer
+    mov %eax, %esp     # load new ESP
+
+    # restore new thread's state
+    pop %edi
+    pop %esi
+    pop %ebx
+    pop %ebp
+    ret
+
 # Reserve stack space (16KB)
 .section .bss
 .align 16

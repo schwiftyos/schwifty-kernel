@@ -3,10 +3,13 @@ private let heapSize = 1024 * 1024 // 1MiB heap
 private nonisolated(unsafe) var heapStart:UnsafeMutableRawPointer? = nil
 private nonisolated(unsafe) var firstBlock:UnsafeMutablePointer<MemoryBlock>? = nil
 
+//private nonisolated(unsafe) var threads:UnsafeMutableBufferPointer<ThreadControlBlock>? = nil
+
 let vgaDriver = VGADriver<80, 25>()
 
 @_cdecl("kmain")
 public func kmain(magic: UInt32, infoPointer: UInt32) {
+    //threads = .allocate(capacity: 1)
     kernelHeapInit()
     vgaClearBuffer()
     //vgaDriver.clearScreen() // causes reboots
@@ -42,10 +45,10 @@ public func kernelHeapInit() {
     // in a production/real kernel, we'd get this from our memory map (Multiboot)
     // for now, we'll use a static buffer
     let buffer = UnsafeMutableRawPointer.allocate(byteCount: heapSize, alignment: 4096)
-    heapStart = buffer
+    unsafe heapStart = buffer
     
-    firstBlock = buffer.assumingMemoryBound(to: MemoryBlock.self)
-    firstBlock?.pointee = MemoryBlock(
+    unsafe firstBlock = buffer.assumingMemoryBound(to: MemoryBlock.self)
+    unsafe firstBlock?.pointee = MemoryBlock(
         size: heapSize - MemoryLayout<MemoryBlock>.size,
         isFree: true,
         next: nil
@@ -56,82 +59,82 @@ public func kernelHeapInit() {
 
 @_cdecl("memset")
 public func memset(_ s: UnsafeMutableRawPointer, _ c: Int32, _ n: Int) -> UnsafeMutableRawPointer {
-    let dest = s.assumingMemoryBound(to: UInt8.self)
+    let dest = unsafe s.assumingMemoryBound(to: UInt8.self)
     var i = 0
     while i < n {
-        dest[i] = UInt8(c)
+        unsafe dest[i] = UInt8(c)
         i += 1
     }
-    return s
+    return unsafe s
 }
 
 @_cdecl("memmove")
 public func memmove(_ dest: UnsafeMutableRawPointer, _ src: UnsafeRawPointer, _ n: Int) -> UnsafeMutableRawPointer {
-    let d = dest.assumingMemoryBound(to: UInt8.self)
-    let s = src.assumingMemoryBound(to: UInt8.self)
-    if d < s {
+    let d = unsafe dest.assumingMemoryBound(to: UInt8.self)
+    let s = unsafe src.assumingMemoryBound(to: UInt8.self)
+    if unsafe d < s {
         for i in 0..<n {
-            d[i] = s[i]
+            unsafe d[i] = s[i]
         }
     } else {
         for i in (0..<n).reversed() {
-            d[i] = s[i]
+            unsafe d[i] = s[i]
         }
     }
-    return dest
+    return unsafe dest
 }
 
 @_cdecl("memcpy")
 public func memcpy(_ dest: UnsafeMutableRawPointer, _ src: UnsafeRawPointer, _ n: Int) -> UnsafeMutableRawPointer {
-    let d = dest.assumingMemoryBound(to: UInt8.self)
-    let s = src.assumingMemoryBound(to: UInt8.self)
+    let d = unsafe dest.assumingMemoryBound(to: UInt8.self)
+    let s = unsafe src.assumingMemoryBound(to: UInt8.self)
     var i = 0
     while i < n {
-        d[i] = s[i]
+        unsafe d[i] = s[i]
         i += 1
     }
-    return dest
+    return unsafe dest
 }
 
 // MARK: free
 @_cdecl("free")
 public func free(_ pointer: UnsafeMutableRawPointer?) {
-    guard let pointer else { return }
+    guard let pointer = unsafe pointer else { return }
     
     // move pointer back to find the header
-    let blockPtr = (pointer - MemoryLayout<MemoryBlock>.size).assumingMemoryBound(to: MemoryBlock.self)
-    blockPtr.pointee.isFree = true
+    let blockPtr = unsafe (pointer - MemoryLayout<MemoryBlock>.size).assumingMemoryBound(to: MemoryBlock.self)
+    unsafe blockPtr.pointee.isFree = true
     
     // simple Coalescing: merge with next free block
-    if let next = blockPtr.pointee.next, next.pointee.isFree {
-        blockPtr.pointee.size += MemoryLayout<MemoryBlock>.size + next.pointee.size
-        blockPtr.pointee.next = next.pointee.next
+    if let next = unsafe blockPtr.pointee.next, unsafe next.pointee.isFree {
+        unsafe blockPtr.pointee.size += MemoryLayout<MemoryBlock>.size + next.pointee.size
+        unsafe blockPtr.pointee.next = next.pointee.next
     }
 }
 
 // MARK: malloc
 @_cdecl("malloc")
 public func malloc(_ size: Int) -> UnsafeMutableRawPointer? {
-    var current = firstBlock
-    while let block = current {
-        if block.pointee.isFree && block.pointee.size >= size {
+    var current = unsafe firstBlock
+    while let block = unsafe current {
+        if unsafe block.pointee.isFree && block.pointee.size >= size {
             // split block if there's enough room for a new header + 1 byte
-            if block.pointee.size > (size + MemoryLayout<MemoryBlock>.size + 8) {
-                let newBlockPtr = UnsafeMutableRawPointer(block) + MemoryLayout<MemoryBlock>.size + size
-                let nextBlock = newBlockPtr.assumingMemoryBound(to: MemoryBlock.self)
-                nextBlock.pointee = MemoryBlock(
+            if unsafe block.pointee.size > (size + MemoryLayout<MemoryBlock>.size + 8) {
+                let newBlockPtr = unsafe UnsafeMutableRawPointer(block) + MemoryLayout<MemoryBlock>.size + size
+                let nextBlock = unsafe newBlockPtr.assumingMemoryBound(to: MemoryBlock.self)
+                unsafe nextBlock.pointee = MemoryBlock(
                     size: block.pointee.size - size - MemoryLayout<MemoryBlock>.size,
                     isFree: true,
                     next: block.pointee.next
                 )
-                block.pointee.size = size
-                block.pointee.next = nextBlock
+                unsafe block.pointee.size = size
+                unsafe block.pointee.next = nextBlock
             }
-            block.pointee.isFree = false
+            unsafe block.pointee.isFree = false
             // return pointer to memory right AFTER the header
-            return UnsafeMutableRawPointer(block) + MemoryLayout<MemoryBlock>.size
+            return unsafe UnsafeMutableRawPointer(block) + MemoryLayout<MemoryBlock>.size
         }
-        current = block.pointee.next
+        unsafe current = block.pointee.next
     }
     return nil // out of memory
 }
@@ -146,10 +149,10 @@ public func posix_memalign(
     // simple hack for kernel: malloc a bit extra and align the pointer
     // in a production kernel, we'd use a buddy allocator for this.
     let totalSize = size + alignment
-    if let raw = malloc(totalSize) {
+    if let raw = unsafe malloc(totalSize) {
         let addr = Int(bitPattern: raw)
         let alignedAddr = (addr + alignment - 1) & ~(alignment - 1)
-        pointer.pointee = UnsafeMutableRawPointer(bitPattern: alignedAddr)
+        unsafe pointer.pointee = UnsafeMutableRawPointer(bitPattern: alignedAddr)
         return 0
     }
     return 12 // ENOMEM
@@ -164,8 +167,8 @@ public func swift_allocObject(
 ) -> UnsafeMutableRawPointer? {
     // alignment mask = (alignment - 1)
     var ptr: UnsafeMutableRawPointer? = nil
-    _ = posix_memalign(&ptr, requiredAlignmentMask + 1, requiredSize)
-    return ptr
+    _ = unsafe posix_memalign(&ptr, requiredAlignmentMask + 1, requiredSize)
+    return unsafe ptr
 }
 
 // MARK: swift_deallocObject
@@ -175,8 +178,45 @@ public func swift_deallocObject(
     allocatedSize: Int,
     allocatedAlignMask: Int
 ) {
-    free(object)
+    unsafe free(object)
 }
+
+/*
+// MARK: Create thread
+func createThread(
+    entryPoint: @escaping () -> Void
+) -> ThreadControlBlock {
+    let stackSize = 4096
+    let stackBase = malloc(stackSize)!
+    var stackPointer = stackBase + stackSize
+    // push the entry point onto the stack
+    stackPointer -= MemoryLayout<UnsafeRawPointer>.size
+    stackPointer.storeBytes(of: unsafeBitCast(entryPoint, to: UnsafeRawPointer.self), as: UnsafeRawPointer.self)
+    let block = ThreadControlBlock(
+        stackPointer: stackPointer,
+        id: threads!.count,
+        state: .ready
+    )
+    threads![threads!.count] = block
+    return block
+}
+
+// MARK: Yield
+@_cdecl("yield")
+func yield() {
+    guard let currentT = currentThread else { return }
+    // find the next thread in the 'Ready' queue
+    // for 1:1 pinning, this might just be the 'next' task in a simple circular list
+    let next = getNextReadyThread() 
+    if next.id == currentT.pointee.id {
+        // no other tasks to run
+        return
+    }
+    // perform the magic switch
+    let oldThread = currentT
+    currentThread = next
+    switch_threads(&oldThread.pointee.stackPointer, next.pointee.stackPointer)
+}*/
 
 // MARK: Externs
 @_extern(c, "cpu_halt")
@@ -187,6 +227,9 @@ func outb(_ port: UInt16, _ value: UInt8)
 
 @_extern(c, "inb")
 func inb(_ port: UInt16) -> UInt8
+
+@_extern(c, "switch_threads")
+func switch_threads(_ old: UnsafeRawPointer, _ new: UnsafeRawPointer)
 
 // MARK: VGA Driver
 struct VGADriver<let width: Int, let height: Int> {
@@ -211,7 +254,7 @@ struct VGADriver<let width: Int, let height: Int> {
         color: UInt8 = 0x07
     ) {
         let index = y * width + x
-        buffer[index] = value
+        unsafe buffer[index] = value
     }
 
     func clearScreen() {
@@ -230,8 +273,8 @@ struct VGADriver<let width: Int, let height: Int> {
     ) {
         var vgaBufferIndex = y * width + x
         message.withUTF8Buffer {
-            for char in $0 {
-                buffer[vgaBufferIndex] = (UInt16(color) << 8) | UInt16(char)
+            for unsafe char in unsafe $0 {
+                unsafe buffer[vgaBufferIndex] = (UInt16(color) << 8) | UInt16(char)
                 vgaBufferIndex += 1
             }
         }
@@ -244,10 +287,10 @@ struct VGADriver<let width: Int, let height: Int> {
     ) {
         var i = 0
         var vgaBufferIndex = y * width + x
-        message.withCString { ptr in
-            while ptr[i] != 0 {
-                let char = ptr[i]
-                buffer[vgaBufferIndex] = (UInt16(color) << 8) | UInt16(char)
+        unsafe message.withCString { ptr in
+            while unsafe ptr[i] != 0 {
+                let char = unsafe ptr[i]
+                unsafe buffer[vgaBufferIndex] = (UInt16(color) << 8) | UInt16(char)
                 vgaBufferIndex += 1
                 i += 1
             }
@@ -256,11 +299,35 @@ struct VGADriver<let width: Int, let height: Int> {
 }
 
 // MARK: MemoryBlock
+@unsafe
 struct MemoryBlock {
     var size:Int
     var isFree:Bool
     var next:UnsafeMutablePointer<MemoryBlock>?
 }
+
+/*
+// MARK: Thread Local Data
+struct ThreadLocalData {
+    var selfPointer:UnsafeMutableRawPointer?
+    var threadID:Int
+    var coreID:Int
+    var taskCount:Int
+    var lastYieldTime:UInt64
+}
+
+// MARK: Thread Control Block
+struct ThreadControlBlock {
+    var stackPointer:UnsafeMutableRawPointer
+    var id:Int
+    var state:State
+
+    enum State { // TODO: fix: missing hash (and random) logic due to automatic conformance
+        case ready
+        case running
+        case blocked
+    }
+}*/
 
 // MARK: Test
 final class Test {
