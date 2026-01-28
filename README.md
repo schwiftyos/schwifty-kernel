@@ -12,13 +12,13 @@ We chose Swift because, objectively speaking, it is the best programming languag
 
 ## Purpose
 
-The main purpose of this project is to provide memory safety at the kernel level while not sacrificing system performance or developer productivity; we would like it to be a drop-in replacement to existing kernels to make systems more secure and performant.
+The main purpose of this project is to provide memory safety at the kernel level while not sacrificing system performance or developer productivity; we would like it to be a drop-in replacement for existing kernels to make them more secure and performant.
 
 ## Prerequisites
 
-- x86_64 architecture
+- x86 architecture
 - QEMU
-- Swift 6.2.3 toolchain
+- Swift 6.2 toolchain
 
 ## Status
 
@@ -26,9 +26,9 @@ The project is currently in heavy development, with many components missing or n
 
 ### Architectures
 
-We have to manually write the boot sequences in assembly for each architecture we want to support, which is why x86_64 is the only one supported right now; Swift code automatically translates to many architectures so we don't need to worry about it.
+We have to manually write the boot sequences in assembly for each architecture we want to support, which is why x86 is the only one supported right now; Swift code automatically translates to many architectures so we only need to work on booting for other architectures to fully support them (in theory).
 
-- [x] x86_64
+- [x] x86
 - [ ] ARM
 - [ ] RISC-V
 - [ ] WASM
@@ -40,11 +40,15 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [ ] Growable
 - [ ] Pages
 - [ ] Fragmentation fix
+- [ ] Segmentation faults
 - [ ] Graceful failure
 - [ ] Virtual Memory
+- [ ] ~O(1) search complexity
 - [ ] ~O(1) allocation complexity
+- [ ] Process isolation
 
 ### Drivers
+
 - [x] VGA
 - [ ] I/O
   - [ ] Synchronous I/O
@@ -62,7 +66,9 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [ ] Interrupts
 - [ ] PIT (Programmable Interval Timer)
 - [ ] Schedulers
+- [ ] Cooperative Scheduling
 - [ ] Threads
 - [ ] Context Switches
 - [ ] Processes
 - [ ] Swift Runtime
+- [ ] Package Traits to only use what you need
