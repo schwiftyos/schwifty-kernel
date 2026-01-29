@@ -60,9 +60,11 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [ ] Virtual I/O
 - [ ] Mouse
 - [ ] NVME
+- [ ] Audio
 
 ### Misc
 
+- [ ] 64-bit mode
 - [ ] Interrupts
 - [ ] PIT (Programmable Interval Timer)
 - [ ] Schedulers

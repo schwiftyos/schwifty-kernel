@@ -81,6 +81,19 @@ switch_threads:
     pop %ebp
     ret
 
+# Read rdrand
+.global read_rdrand
+read_rdrand:
+    rdrand %eax
+    jnc read_rdrand # try again if CF=0 (the hardware was busy)
+    ret
+
+# rdtsc
+.global rdtsc
+rdtsc:
+    rdtsc # loads EDX:EAX with the 64-bit timestamp
+    ret   # Swift will read EAX (the lower 32 bits)
+
 # Reserve stack space (16KB)
 .section .bss
 .align 16

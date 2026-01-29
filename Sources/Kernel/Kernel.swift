@@ -1,31 +1,43 @@
 
-private let heapSize = 1024 * 1024 // 1MiB heap
-private nonisolated(unsafe) var heapStart:UnsafeMutableRawPointer? = nil
-private nonisolated(unsafe) var firstBlock:UnsafeMutablePointer<MemoryBlock>? = nil
+private nonisolated(unsafe) var nextRandom = UInt32(0x12345678)
 
-//private nonisolated(unsafe) var threads:UnsafeMutableBufferPointer<ThreadControlBlock>? = nil
+/// Measured in bytes.
+private let maximumStackSize = 8192 // 8KiB
+
+/// Measured in bytes.
+private let heapSize = 1024 * 1024 // 1MiB
+private nonisolated(unsafe) var heapStart:UnsafeMutableRawPointer? = nil
+private nonisolated(unsafe) var heapFirstBlock:UnsafeMutablePointer<HeapMemoryBlock>? = nil
+
+/// Active thread index being executed.
+private nonisolated(unsafe) var currentThreadIndex = 0
+private nonisolated(unsafe) var threads = [ThreadControlBlock]()
 
 let vgaDriver = VGADriver<80, 25>()
 
 @_cdecl("kmain")
-public func kmain(magic: UInt32, infoPointer: UInt32) {
-    //threads = .allocate(capacity: 1)
-    kernelHeapInit()
+public func kmain(
+    magic: UInt32,
+    infoPointer: UInt32
+) {
+    initRandom()
+    initHeap()
+    initMultitasking()
     vgaClearBuffer()
-    //vgaDriver.clearScreen() // causes reboots
-
-    var list = [UInt16]()
-    for i in 0..<10 {
-        list.append(UInt16(i)) // triggers malloc/realloc, testing heap integrity and validity
-    }
+    //vgaDriver.clearScreen() // TODO: fix | causes reboots
 
     vgaDriver.write("holy shmoly", y: 3, color: 0x0A)
+    vgaDriver.write(StaticString("SchwiftyOS"), color: 0x0A)
 
-    let operatingSystem = StaticString("SchwiftyOS")
-    vgaDriver.write(operatingSystem, color: 0x0A)
-    
-    let msg = StaticString("Hello World!")
-    vgaDriver.write(msg, y: 1)
+    var set = Set<Int>()
+    //set.insert(1) // TODO: fix | causes reboots
+
+    if set.contains(1) {
+        vgaDriver.write(StaticString("Set contains 1"), y: 1)
+    } else {
+        vgaDriver.write(StaticString("Set !contains 1"), y: 1)
+    }
+
     while true {
         cpu_halt()
     }
@@ -41,18 +53,36 @@ func vgaClearBuffer() {
 
 // MARK: Init heap
 @_cdecl("kernel_heap_init")
-public func kernelHeapInit() {
+public func initHeap() {
     // in a production/real kernel, we'd get this from our memory map (Multiboot)
     // for now, we'll use a static buffer
     let buffer = UnsafeMutableRawPointer.allocate(byteCount: heapSize, alignment: 4096)
     unsafe heapStart = buffer
     
-    unsafe firstBlock = buffer.assumingMemoryBound(to: MemoryBlock.self)
-    unsafe firstBlock?.pointee = MemoryBlock(
-        size: heapSize - MemoryLayout<MemoryBlock>.size,
+    unsafe heapFirstBlock = buffer.assumingMemoryBound(to: HeapMemoryBlock.self)
+    unsafe heapFirstBlock?.pointee = HeapMemoryBlock(
+        size: heapSize - MemoryLayout<HeapMemoryBlock>.size,
         isFree: true,
         next: nil
     )
+}
+
+// MARK: Init multitasking
+func initMultitasking() {
+    unsafe threads.reserveCapacity(6)
+    // TODO: fix | causes reboots
+    /*
+    let mainThread = unsafe ThreadControlBlock(
+        stackPointer: UnsafeMutableRawPointer(bitPattern: 0)!, // overwritten on first yield
+        id: 0,
+        state: .running
+    )
+    unsafe threads.append(mainThread)*/
+}
+
+// MARK: Init random
+func initRandom() {
+    unsafe nextRandom = UInt32(truncatingIfNeeded: rdtsc())
 }
 
 // MARK: C helpers
@@ -102,12 +132,12 @@ public func free(_ pointer: UnsafeMutableRawPointer?) {
     guard let pointer = unsafe pointer else { return }
     
     // move pointer back to find the header
-    let blockPtr = unsafe (pointer - MemoryLayout<MemoryBlock>.size).assumingMemoryBound(to: MemoryBlock.self)
+    let blockPtr = unsafe (pointer - MemoryLayout<HeapMemoryBlock>.size).assumingMemoryBound(to: HeapMemoryBlock.self)
     unsafe blockPtr.pointee.isFree = true
     
     // simple Coalescing: merge with next free block
     if let next = unsafe blockPtr.pointee.next, unsafe next.pointee.isFree {
-        unsafe blockPtr.pointee.size += MemoryLayout<MemoryBlock>.size + next.pointee.size
+        unsafe blockPtr.pointee.size += MemoryLayout<HeapMemoryBlock>.size + next.pointee.size
         unsafe blockPtr.pointee.next = next.pointee.next
     }
 }
@@ -115,15 +145,15 @@ public func free(_ pointer: UnsafeMutableRawPointer?) {
 // MARK: malloc
 @_cdecl("malloc")
 public func malloc(_ size: Int) -> UnsafeMutableRawPointer? {
-    var current = unsafe firstBlock
+    var current = unsafe heapFirstBlock
     while let block = unsafe current {
         if unsafe block.pointee.isFree && block.pointee.size >= size {
             // split block if there's enough room for a new header + 1 byte
-            if unsafe block.pointee.size > (size + MemoryLayout<MemoryBlock>.size + 8) {
-                let newBlockPtr = unsafe UnsafeMutableRawPointer(block) + MemoryLayout<MemoryBlock>.size + size
-                let nextBlock = unsafe newBlockPtr.assumingMemoryBound(to: MemoryBlock.self)
-                unsafe nextBlock.pointee = MemoryBlock(
-                    size: block.pointee.size - size - MemoryLayout<MemoryBlock>.size,
+            if unsafe block.pointee.size > (size + MemoryLayout<HeapMemoryBlock>.size + 8) {
+                let newBlockPtr = unsafe UnsafeMutableRawPointer(block) + MemoryLayout<HeapMemoryBlock>.size + size
+                let nextBlock = unsafe newBlockPtr.assumingMemoryBound(to: HeapMemoryBlock.self)
+                unsafe nextBlock.pointee = HeapMemoryBlock(
+                    size: block.pointee.size - size - MemoryLayout<HeapMemoryBlock>.size,
                     isFree: true,
                     next: block.pointee.next
                 )
@@ -132,7 +162,7 @@ public func malloc(_ size: Int) -> UnsafeMutableRawPointer? {
             }
             unsafe block.pointee.isFree = false
             // return pointer to memory right AFTER the header
-            return unsafe UnsafeMutableRawPointer(block) + MemoryLayout<MemoryBlock>.size
+            return unsafe UnsafeMutableRawPointer(block) + MemoryLayout<HeapMemoryBlock>.size
         }
         unsafe current = block.pointee.next
     }
@@ -181,46 +211,166 @@ public func swift_deallocObject(
     unsafe free(object)
 }
 
-/*
+// MARK: arc4random_buf
+@_cdecl("arc4random_buf")
+public func arc4random_buf(
+    _ buffer: UnsafeMutableRawPointer,
+    _ nbytes: Int
+) {
+    let dest = unsafe buffer.assumingMemoryBound(to: UInt8.self)
+    for i in 0..<nbytes {
+        let val = read_rdrand()
+        if i % 4 == 0 {
+            unsafe dest[i] = UInt8(val & 0xFF)
+        } else {
+            unsafe dest[i] = UInt8((val >> 8) & 0xFF)
+        }
+    }
+}
+
+// MARK: arc4random
+@_cdecl("arc4random")
+public func arc4random() -> UInt32 {
+    var val: UInt32 = 0
+    unsafe arc4random_buf(&val, MemoryLayout<UInt32>.size)
+    return val
+}
+
+// MARK: __ashldi3
+@_cdecl("__ashldi3")
+public func __ashldi3(
+    value: UInt64,
+    count: Int32
+) -> UInt64 {
+    if count == 0 {
+        return value
+    }
+    let low = UInt32(value & 0xFFFFFFFF)
+    let high = UInt32(value >> 32)
+    if count >= 32 {
+        let newHigh = low << (count - 32)
+        return UInt64(newHigh) << 32
+    } else {
+        let newLow = low << count
+        let newHigh = (high << count) | (low >> (32 - count))
+        return (UInt64(newHigh) << 32) | UInt64(newLow)
+    }
+}
+
+// MARK: __lshrdi3
+@_cdecl("__lshrdi3")
+public func __lshrdi3(
+    value: UInt64,
+    count: Int32
+) -> UInt64 {
+    if count == 0 {
+        return value
+    }
+    let low = UInt32(value & 0xFFFFFFFF)
+    let high = UInt32(value >> 32)
+    if count >= 32 {
+        let newLow = high >> (count - 32)
+        return UInt64(newLow)
+    } else {
+        let newHigh = high >> count
+        let newLow = (low >> count) | (high << (32 - count))
+        return (UInt64(newHigh) << 32) | UInt64(newLow)
+    }
+}
+
+// MARK: __ashrdi3
+@_cdecl("__ashrdi3")
+public func __ashrdi3(value: Int64, count: Int32) -> Int64 {
+    if count == 0 {
+        return value
+    }
+    let bits = UInt64(bitPattern: value)
+    let low = UInt32(bits & 0xFFFFFFFF)
+    let high = Int32(bitPattern: UInt32(bits >> 32))
+    if count >= 32 {
+        let newHigh = high >> 31
+        let newLow = high >> (count - 32)
+        let resultBits = (UInt64(UInt32(bitPattern: newHigh)) << 32) | UInt64(UInt32(bitPattern: newLow))
+        return Int64(bitPattern: resultBits)
+    } else {
+        let newHigh = high >> count
+        let newLow = (low >> count) | (UInt32(bitPattern: high) << (32 - count))
+        let resultBits = (UInt64(UInt32(bitPattern: newHigh)) << 32) | UInt64(newLow)
+        return Int64(bitPattern: resultBits)
+    }
+}
+
+// MARK: ceil
+@_cdecl("ceil")
+public func ceil(_ x: Double) -> Double {
+    guard x.isFinite else { return x }
+    let truncated = Double(Int64(x))
+    if x > 0 && x > truncated {
+        // x is positive and has a fractional part; round up
+        return truncated + 1.0
+    }
+    // x is negative; already truncated
+    return truncated
+}
+
+// MARK: ceilf
+@_cdecl("ceilf")
+public func ceilf(_ x: Float) -> Float {
+    return Float(ceil(Double(x)))
+}
+
 // MARK: Create thread
 func createThread(
     entryPoint: @escaping () -> Void
-) -> ThreadControlBlock {
-    let stackSize = 4096
-    let stackBase = malloc(stackSize)!
-    var stackPointer = stackBase + stackSize
+) -> Int {
+    let stackBase = unsafe malloc(maximumStackSize)!
+    var stackPointer = unsafe stackBase + maximumStackSize
+    // ensure alignment
+    let spAddr = Int(bitPattern: stackPointer)
+    unsafe stackPointer = UnsafeMutableRawPointer(bitPattern: spAddr & ~0xF)!
+
     // push the entry point onto the stack
-    stackPointer -= MemoryLayout<UnsafeRawPointer>.size
-    stackPointer.storeBytes(of: unsafeBitCast(entryPoint, to: UnsafeRawPointer.self), as: UnsafeRawPointer.self)
-    let block = ThreadControlBlock(
-        stackPointer: stackPointer,
-        id: threads!.count,
+    let registerCount = 5
+    unsafe stackPointer -= (registerCount * MemoryLayout<UInt32>.size)
+
+    let frame = unsafe stackPointer.assumingMemoryBound(to: UInt32.self)
+    unsafe frame[6] = UInt32(UInt(bitPattern: unsafeBitCast(entryPoint, to: UnsafeRawPointer.self)))
+
+    // flush registers
+    for i in 0..<4 {
+        unsafe frame[i] = 0
+    }
+
+    let thread = unsafe ThreadControlBlock(
+        stackPointer: frame,
+        id: threads.count,
         state: .ready
     )
-    threads![threads!.count] = block
-    return block
+    unsafe threads.append(thread)
+    return thread.id
 }
 
 // MARK: Yield
 @_cdecl("yield")
 func yield() {
-    guard let currentT = currentThread else { return }
+    let current = unsafe threads[currentThreadIndex]
     // find the next thread in the 'Ready' queue
     // for 1:1 pinning, this might just be the 'next' task in a simple circular list
-    let next = getNextReadyThread() 
-    if next.id == currentT.pointee.id {
-        // no other tasks to run
-        return
-    }
-    // perform the magic switch
-    let oldThread = currentT
-    currentThread = next
-    switch_threads(&oldThread.pointee.stackPointer, next.pointee.stackPointer)
-}*/
+    let next = unsafe (current.id + 1) % threads.count
+    let nextThread = unsafe threads[next]
+    unsafe currentThreadIndex = next
+    unsafe switch_threads(current.stackPointer, nextThread.stackPointer)
+}
 
 // MARK: Externs
 @_extern(c, "cpu_halt")
 func cpu_halt()
+
+@_extern(c, "read_rdrand")
+func read_rdrand() -> UInt32
+
+@_extern(c, "rdtsc")
+func rdtsc() -> UInt32
 
 @_extern(c, "outb")
 func outb(_ port: UInt16, _ value: UInt8)
@@ -298,22 +448,12 @@ struct VGADriver<let width: Int, let height: Int> {
     }
 }
 
-// MARK: MemoryBlock
+// MARK: HeapMemoryBlock
 @unsafe
-struct MemoryBlock {
+struct HeapMemoryBlock {
     var size:Int
     var isFree:Bool
-    var next:UnsafeMutablePointer<MemoryBlock>?
-}
-
-/*
-// MARK: Thread Local Data
-struct ThreadLocalData {
-    var selfPointer:UnsafeMutableRawPointer?
-    var threadID:Int
-    var coreID:Int
-    var taskCount:Int
-    var lastYieldTime:UInt64
+    var next:UnsafeMutablePointer<HeapMemoryBlock>?
 }
 
 // MARK: Thread Control Block
@@ -326,18 +466,5 @@ struct ThreadControlBlock {
         case ready
         case running
         case blocked
-    }
-}*/
-
-// MARK: Test
-final class Test {
-    var bro = 0
-
-    func increment() {
-        bro += 1
-    }
-
-    func decrement() {
-        bro -= 1
     }
 }
