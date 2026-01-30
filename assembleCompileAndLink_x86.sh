@@ -3,7 +3,7 @@ as --32 boot_x86.S -o boot_x86.o
 
 # compile
 swiftc -target i686-unknown-none-elf \
-    -emit-object $PWD/Sources/Kernel/Kernel.swift \
+    -emit-object $PWD/Sources/Kernel/*.swift -o Kernel.o \
     -static \
     -wmo \
     -Osize \
