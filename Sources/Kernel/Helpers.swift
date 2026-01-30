@@ -146,7 +146,7 @@ public func arc4random_buf(
 // MARK: arc4random
 @_cdecl("arc4random")
 public func arc4random() -> UInt32 {
-    var val: UInt32 = 0
+    var val:UInt32 = 0
     unsafe arc4random_buf(&val, MemoryLayout<UInt32>.size)
     return val
 }
@@ -215,6 +215,31 @@ public func __ashrdi3(value: Int64, count: Int32) -> Int64 {
     }
 }
 
+// MARK: __udivdi3
+@_cdecl("__udivdi3")
+public func __udivdi3(
+    _ dividend: UInt64,
+    _ divisor: UInt64
+) -> UInt64 {
+    // TODO: optimize
+    if divisor == 0 {
+        // TODO: kernel panic
+        return 0 
+    }
+    var quotient:UInt64 = 0
+    var remainder:UInt64 = 0
+    // Binary Long Division Algorithm
+    for i in (0...63).reversed() {
+        remainder <<= 1
+        remainder |= (dividend >> i) & 1
+        if remainder >= divisor {
+            remainder -= divisor
+            quotient |= (1 << i)
+        }
+    }
+    return quotient
+}
+
 // MARK: ceil
 @_cdecl("ceil")
 public func ceil(_ x: Double) -> Double {
@@ -243,36 +268,5 @@ func yield() {
     let next = unsafe (current.id + 1) % threads.count
     let nextThread = unsafe threads[next]
     unsafe currentThreadIndex = next
-    unsafe switch_threads(current.stackPointer, nextThread.stackPointer)
-}
-
-// MARK: Create thread
-func createThread(
-    entryPoint: @escaping () -> Void
-) -> Int {
-    let stackBase = unsafe malloc(maximumStackSize)!
-    var stackPointer = unsafe stackBase + maximumStackSize
-    // ensure alignment
-    let spAddr = Int(bitPattern: stackPointer)
-    unsafe stackPointer = UnsafeMutableRawPointer(bitPattern: spAddr & ~0xF)!
-
-    // push the entry point onto the stack
-    let registerCount = 5
-    unsafe stackPointer -= (registerCount * MemoryLayout<UInt32>.size)
-
-    let frame = unsafe stackPointer.assumingMemoryBound(to: UInt32.self)
-    unsafe frame[6] = UInt32(UInt(bitPattern: unsafeBitCast(entryPoint, to: UnsafeRawPointer.self)))
-
-    // flush registers
-    for i in 0..<4 {
-        unsafe frame[i] = 0
-    }
-
-    let thread = unsafe ThreadControlBlock(
-        stackPointer: frame,
-        id: threads.count,
-        state: .ready
-    )
-    unsafe threads.append(thread)
-    return unsafe thread.id
+    unsafe context_switch(current.stackPointer, nextThread.stackPointer)
 }

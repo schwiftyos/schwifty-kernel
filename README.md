@@ -64,7 +64,7 @@ We have to manually write the boot sequences in assembly for each architecture w
 
 ### Misc
 
-- [ ] 64-bit mode
+- [ ] Protected Mode
 - [ ] Interrupts
 - [ ] PIT (Programmable Interval Timer)
 - [ ] Schedulers

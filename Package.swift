@@ -19,15 +19,9 @@ let package = Package(
     ],
     traits: [
     ],
-    dependencies: [
-        .package(url: "https://github.com/apple/swift-mmio", from: "0.1.1"),
-    ],
     targets: [
         .executableTarget(
             name: "Kernel",
-            dependencies: [
-                .product(name: "MMIO", package: "swift-mmio")
-            ],
             swiftSettings: swiftSettings
         ),
         .testTarget(

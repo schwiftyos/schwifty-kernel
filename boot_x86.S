@@ -59,9 +59,29 @@ load_gs:
     mov %ax, %gs
     ret
 
+# Return the CR0 register (to check the bit modes)
+.global get_cr0
+get_cr0:
+    mov %eax, %cr0
+    ret
+
+# Read Extended Feature Enable register (to check for "Long Mode")
+.global read_efer
+read_efer:
+    mov %ecx, 0xC0000080 # EFER MSR address
+    rdmsr                # Reads MSR into EDX:EAX
+    ret
+
+# Return the Code Segment register (to check privilege level)
+.global get_cs
+get_cs:
+    mov 0, %eax
+    mov %cs, %ax 
+    ret
+
 # Context switch
-.global switch_threads
-switch_threads:
+.global context_switch
+context_switch:
     # save current thread's state
     push %ebp
     push %ebx

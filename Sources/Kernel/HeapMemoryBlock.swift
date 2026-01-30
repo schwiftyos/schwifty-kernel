@@ -1,5 +1,5 @@
 
-@unsafe
+@safe
 struct HeapMemoryBlock {
     var size:Int
     var isFree:Bool
