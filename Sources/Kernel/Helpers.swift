@@ -47,13 +47,13 @@ public func free(_ pointer: UnsafeMutableRawPointer?) {
     guard let pointer = unsafe pointer else { return }
     
     // move pointer back to find the header
-    let blockPtr = unsafe (pointer - MemoryLayout<HeapMemoryBlock>.size).assumingMemoryBound(to: HeapMemoryBlock.self)
-    unsafe blockPtr.pointee.isFree = true
+    let blockPointer = unsafe (pointer - MemoryLayout<HeapMemoryBlock>.size).assumingMemoryBound(to: HeapMemoryBlock.self)
+    unsafe blockPointer.pointee.isFree = true
     
     // simple Coalescing: merge with next free block
-    if let next = unsafe blockPtr.pointee.next, unsafe next.pointee.isFree {
-        unsafe blockPtr.pointee.size += MemoryLayout<HeapMemoryBlock>.size + next.pointee.size
-        unsafe blockPtr.pointee.next = next.pointee.next
+    if let next = unsafe blockPointer.pointee.next, unsafe next.pointee.isFree {
+        unsafe blockPointer.pointee.size += MemoryLayout<HeapMemoryBlock>.size + next.pointee.size
+        unsafe blockPointer.pointee.next = next.pointee.next
     }
 }
 
@@ -65,8 +65,8 @@ public func malloc(_ size: Int) -> UnsafeMutableRawPointer? {
         if unsafe block.pointee.isFree && block.pointee.size >= size {
             // split block if there's enough room for a new header + 1 byte
             if unsafe block.pointee.size > (size + MemoryLayout<HeapMemoryBlock>.size + 8) {
-                let newBlockPtr = unsafe UnsafeMutableRawPointer(block) + MemoryLayout<HeapMemoryBlock>.size + size
-                let nextBlock = unsafe newBlockPtr.assumingMemoryBound(to: HeapMemoryBlock.self)
+                let newBlockPointer = unsafe UnsafeMutableRawPointer(block) + MemoryLayout<HeapMemoryBlock>.size + size
+                let nextBlock = unsafe newBlockPointer.assumingMemoryBound(to: HeapMemoryBlock.self)
                 unsafe nextBlock.pointee = HeapMemoryBlock(
                     size: block.pointee.size - size - MemoryLayout<HeapMemoryBlock>.size,
                     isFree: true,
@@ -111,9 +111,9 @@ public func swift_allocObject(
     requiredAlignmentMask: Int
 ) -> UnsafeMutableRawPointer? {
     // alignment mask = (alignment - 1)
-    var ptr: UnsafeMutableRawPointer? = nil
-    _ = unsafe posix_memalign(&ptr, requiredAlignmentMask + 1, requiredSize)
-    return unsafe ptr
+    var pointer:UnsafeMutableRawPointer? = nil
+    _ = unsafe posix_memalign(&pointer, requiredAlignmentMask + 1, requiredSize)
+    return unsafe pointer
 }
 
 // MARK: swift_deallocObject

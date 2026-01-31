@@ -52,16 +52,16 @@ extension KernelThread {
         var stack = unsafe (stackBottom + maximumStackSize).assumingMemoryBound(to: UInt32.self)
         
         // push EIP (Entry Point)
-        unsafe stack = stack.advanced(by: -1)
+        unsafe stack -= 1
         unsafe stack.pointee = UInt32(bitPattern: Int32(truncatingIfNeeded: Int(bitPattern: UnsafeRawPointer(bitPattern: unsafeBitCast(entryPoint, to: Int.self)))))
         
         // push EFLAGS (0x202 enables interrupts)
-        unsafe stack = stack.advanced(by: -1)
+        unsafe stack -= 1
         unsafe stack.pointee = 0x202
         
         // flush registers
         for _ in 0..<7 {
-            unsafe stack = stack.advanced(by: -1)
+            unsafe stack -= 1
             unsafe stack.pointee = 0
         }
         let task = unsafe KernelTask(
