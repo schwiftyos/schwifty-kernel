@@ -20,7 +20,13 @@ public func kmain(
     magic: UInt32,
     infoPointer: UInt32
 ) {
-    initKernel()
+    guard magic == 0x36D76289 else {
+        cpu_halt()
+        return 
+    }
+    initKernel(infoPointer: infoPointer)
+    cpu_halt()
+    return;
 
     vgaDriver.clearScreen()
     vgaDriver.write(StaticString("SchwiftyOS"), color: 0x0A)
