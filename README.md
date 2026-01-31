@@ -17,6 +17,10 @@ The main purpose of this project is to provide memory safety at the kernel level
 ## Prerequisites
 
 - x86 architecture
+- assembler (as)
+- linker (ld)
+- bash
+- grub (+libisoburn, mtools, dosfstools)
 - QEMU
 - Swift 6.2 toolchain
 
@@ -64,7 +68,8 @@ We have to manually write the boot sequences in assembly for each architecture w
 
 ### Misc
 
-- [ ] Protected Mode
+- [x] Protected Mode
+- [ ] Long Mode
 - [ ] Interrupts
 - [ ] PIT (Programmable Interval Timer)
 - [ ] Schedulers

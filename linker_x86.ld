@@ -2,12 +2,11 @@ ENTRY(_start)
 
 SECTIONS
 {
-    /* Multiboot expects the kernel at 1MB */
     . = 1M;
 
     .text BLOCK(4K) : ALIGN(4K)
     {
-        *(.multiboot)
+        KEEP(*(.multiboot_header))
         *(.text*)
     }
 

@@ -1,29 +1,42 @@
-# Multiboot constants
-.set ALIGN,    1<<0             # align loaded modules on page boundaries
-.set MEMINFO,  1<<1             # provide memory map
-.set FLAGS,    ALIGN | MEMINFO  # Multiboot 'flag' field
-.set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
-.set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
 
-# Multiboot header
-.section .multiboot
-.align 4
-.long MAGIC
-.long FLAGS
-.long CHECKSUM
+.set MB2_MAGIC,    0xE85250D6
+.set MB2_ARCH,     0 # 0 = i386 (Protected Mode)
+.set MB2_LENGTH,   (header_end - header_start)
+.set MB2_CHECKSUM, -(MB2_MAGIC + MB2_ARCH + MB2_LENGTH)
+
+.section .multiboot_header
+.align 8
+.global header_start
+header_start:
+    .long MB2_MAGIC
+    .long MB2_ARCH
+    .long MB2_LENGTH
+    .long MB2_CHECKSUM
+
+    # Request Framebuffer
+    .align 8
+    .short 5    # type
+    .short 0    # flags
+    .long 20    # size
+    .long 1024  # width
+    .long 768   # height
+    .long 32    # depth (RGBA)
+    .long 0     # padding to make 8-byte aligned
+
+    # End Tag
+    .align 8
+    .short 0 # type 0
+    .short 0 # flags
+    .long 8  # size
+.global header_end
+header_end:
 
 # Kernel Entry Point
 .section .text
 .global _start
 _start:
-	# set up the stack
-	mov $stack_top, %esp
-
-    # align ESP to 16 bytes
-    and $-16, %esp   
-    
-    # subtract 12 bytes 'cause the 'call' below will push 4 bytes (return address); 12 + 4 = 16. This ensures kmain starts with a 16-byte aligned stack
-    sub $12, %esp    
+	cli                  # disable interrupts
+	mov $stack_top, %esp # set up the stack 
 
     push %ebx # Multiboot info
     push %eax # Magic number

@@ -48,9 +48,9 @@ extension VGADriver {
     ) {
         var i = 0
         var vgaBufferIndex = y * width + x
-        unsafe message.withCString { ptr in
-            while unsafe ptr[i] != 0 {
-                let char = unsafe ptr[i]
+        unsafe message.withCString { pointer in
+            while unsafe pointer[i] != 0 {
+                let char = unsafe pointer[i]
                 unsafe buffer[vgaBufferIndex] = (UInt16(color) << 8) | UInt16(char)
                 vgaBufferIndex += 1
                 i += 1
