@@ -39,12 +39,12 @@ We have to manually write the boot sequences in assembly for each architecture w
 
 ### Drivers
 
+- [x] UART (Serial Port)
 - [ ] VGA
 - [ ] I/O
   - [ ] Synchronous I/O
   - [ ] Shared Rings (Ring Buffers)
   - [ ] `io_uring`
-- [ ] UART (Serial Port)
 - [ ] Keyboard
 - [ ] Network
 - [ ] Virtual I/O
