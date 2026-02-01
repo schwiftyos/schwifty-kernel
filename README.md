@@ -55,7 +55,7 @@ We have to manually write the boot sequences in assembly for each architecture w
 ### Misc
 
 - [x] Protected Mode
-- [ ] Long Mode
+- [x] Long Mode
 - [ ] Single Address Space (SASOS)
 - [ ] Interrupts
 - [ ] PIT (Programmable Interval Timer)

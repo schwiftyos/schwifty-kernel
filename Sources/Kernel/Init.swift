@@ -36,7 +36,7 @@ private func initMultiboot2(infoPointer: UInt) {
             let fb = unsafe FramebufferTag(tagPointer: tagPointer)
             fb.drawStatus()
         default:
-            break
+            return
         }
         // tags are 8-byte aligned!
         offset += (header.size + 7) & ~7

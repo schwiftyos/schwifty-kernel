@@ -1,6 +1,6 @@
 echo "Compiling..."
 
-if swiftc -target i686-unknown-none-elf \
+if swiftc -target x86_64-unknown-none-elf \
         -emit-object \
         $PWD/Sources/Kernel/*.swift \
         $PWD/Sources/Kernel/*/*.swift \
@@ -8,10 +8,7 @@ if swiftc -target i686-unknown-none-elf \
         -static \
         -wmo \
         -Osize \
-        -Xfrontend -disable-implicit-concurrency-module-import \
         -Xfrontend -disable-stack-protector \
-        -Xcc -fno-stack-protector \
-        -Xcc -fno-pic \
         -enable-experimental-feature Extern \
         -enable-experimental-feature Embedded ; then
     echo "Compilation successful"

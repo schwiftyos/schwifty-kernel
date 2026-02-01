@@ -6,15 +6,8 @@ nonisolated(unsafe) var heapFirstBlock:UnsafeMutablePointer<HeapMemoryBlock>? = 
 
 @_cdecl("kmain")
 public func kmain(
-    magic: UInt32,
     infoPointer: UInt
 ) {
-    // check multiboot2 integrity
-    guard magic == 0x36D76289 else {
-        cpu_halt()
-        return 
-    }
-
     initKernel(infoPointer: infoPointer)
 
     while true {
