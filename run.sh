@@ -1,1 +1,1 @@
-qemu-system-i386 -cdrom SchwiftyOS.iso
+qemu-system-x86_64 -cdrom SchwiftyOS.iso

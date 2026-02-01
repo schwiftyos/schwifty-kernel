@@ -34,24 +34,112 @@ header_end:
 # Kernel Entry Point
 .section .text
 .global _start
+.code32
 _start:
 	cli                  # disable interrupts
-	mov $stack_top, %esp # set up the stack 
+    mov $stack_top, %esp # setup stack
+    push %ebx            # save multiboot pointer for later use
 
-    push %ebx # Multiboot info
-    push %eax # Magic number
+    # flush page tables
+    mov $p4_table, %edi
+    mov $3072, %ecx      # (4096 * 3) / 4 bytes
+    xor %eax, %eax
+    rep stosl
 
-	# call the Swift entry point
-	call kmain
+    pop %esi             # restore multiboot pointer
+
+    # map P4 to P3
+    mov $p3_table, %eax
+    or $0b11, %eax
+    mov %eax, (p4_table)
+
+    # map P3 to P2
+    mov $p2_table, %eax
+    or $0b11, %eax
+    mov %eax, (p3_table)
+
+    # map P2 to 2MB Huge Pages (identity map first 1GB)
+    xor %ecx, %ecx
+.map_p2:
+    mov %ecx, %eax
+    shl $21, %eax
+    or $0b10000011, %eax           # (present | writable | huge)
+
+    mov %eax, p2_table(,%ecx,8)    # write the low 32 bits
+    movl $0, p2_table + 4(,%ecx,8) # write the high 32 bits as zero
+
+    inc %ecx
+    cmp $512, %ecx
+    jne .map_p2
+
+    # enable Long Mode
+
+    # enable PAE
+    mov %cr4, %eax
+    or $(1 << 5), %eax
+    mov %eax, %cr4
+
+    # load P4 to CR3
+    mov $p4_table, %eax
+    mov %eax, %cr3
+
+    # set Long Mode bit
+    mov $0xC0000080, %ecx
+    rdmsr
+    or $(1 << 8), %eax
+    wrmsr
+
+    # enable paging
+    mov %cr0, %eax
+    or $(1 << 31), %eax
+    mov %eax, %cr0
+
+    # long jump to Long Mode
+    lgdt gdt64_pointer
+    ljmp $8, $.long_mode_start
 
 .global cpu_halt
 cpu_halt:
 	hlt
 	ret
 
-# Reserve stack space (16KB)
+.code64
+.long_mode_start:
+    # flush data segments
+    xor %ax, %ax
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %ss
+    mov %ax, %fs
+    mov %ax, %gs
+
+    mov $stack_top, %rsp # setup 64-bit stack
+    mov %rsi, %rdi       # multiboot pointer
+    call kmain
+    hlt
+
+# Page tables
 .section .bss
+.align 4096
+p4_table:
+    .skip 4096
+p3_table:
+    .skip 4096
+p2_table:
+    .skip 4096
+
+# Stack
 .align 16
 stack_bottom:
     .skip 16384 # 16 KiB
 stack_top:
+
+.section .rodata
+gdt64:
+    .quad 0
+    .quad (1<<43) | (1<<44) | (1<<47) | (1<<53) # (executable | descriptor type | present | 64-bit)
+gdt64_end:
+
+gdt64_pointer:
+    .short . - gdt64 - 1
+    .quad gdt64
