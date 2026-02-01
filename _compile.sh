@@ -4,6 +4,7 @@ if swiftc -target x86_64-unknown-none-elf \
         -emit-object \
         $PWD/Sources/Kernel/*.swift \
         $PWD/Sources/Kernel/*/*.swift \
+        $PWD/Sources/Kernel/*/*/*.swift \
         -o Kernel.o \
         -static \
         -wmo \

@@ -64,6 +64,7 @@ extension FramebufferTag {
                         toByteOffset: offset,
                         as: UInt32.self
                     )
+                    logger.log("FramebufferTag: drew a glyph")
                 }
             }
         }

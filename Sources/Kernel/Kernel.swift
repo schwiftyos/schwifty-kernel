@@ -6,10 +6,12 @@ nonisolated(unsafe) var heapFirstBlock:UnsafeMutablePointer<HeapMemoryBlock>? = 
 
 @_cdecl("kmain")
 public func kmain(
-    infoPointer: UInt
+    infoPointer: UnsafeRawPointer
 ) {
+    UART.initialize()
     initKernel(infoPointer: infoPointer)
 
+    logger.log("kmain: halting CPU")
     while true {
         cpu_halt()
     }
