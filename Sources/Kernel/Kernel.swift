@@ -1,6 +1,4 @@
 
-nonisolated(unsafe) var nextRandom = UInt32(0x12345678)
-
 /// Measured in bytes.
 let heapSize = 1024 * 1024 // 1MiB
 nonisolated(unsafe) var heapStart:UnsafeMutableRawPointer? = nil
