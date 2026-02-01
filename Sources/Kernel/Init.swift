@@ -1,23 +1,14 @@
 
 public func initKernel(
-    infoPointer: UInt32
+    infoPointer: UInt
 ) {
-    initRandom()
     initMultiboot2(infoPointer: infoPointer)
-
     initHeap()
-    //initCPUs(cores: 1)
-    initMultitasking()
-}
-
-// MARK: Random
-private func initRandom() {
-    unsafe nextRandom = UInt32(truncatingIfNeeded: rdtsc())
 }
 
 // MARK: Multiboot2
-private func initMultiboot2(infoPointer: UInt32) {
-    let infoBase = unsafe UnsafeRawPointer(bitPattern: UInt(infoPointer))!
+private func initMultiboot2(infoPointer: UInt) {
+    let infoBase = unsafe UnsafeRawPointer(bitPattern: infoPointer)!
     let totalSize = unsafe infoBase.load(as: UInt32.self)
     var offset:UInt32 = 8 // skip the 8-byte header
     while offset < totalSize {
@@ -75,37 +66,4 @@ private func initHeap() {
         isFree: true,
         next: nil
     )
-}
-
-// MARK: Multitasking
-private func initMultitasking() {
-    unsafe threads.reserveCapacity(6)
-    // TODO: fix | causes reboots
-    /*let mainThread = unsafe KernelThread(
-        stackPointer: UnsafeMutableRawPointer(bitPattern: 0)!, // overwritten on first yield
-        id: 0,
-        state: .running
-    )
-    unsafe threads.append(mainThread)*/
-}
-
-// MARK: CPUs
-private func initCPUs(cores: Int) {
-    let lapic = LocalAPIC()
-    lapic.setup()
-
-    for core in 1..<cores {
-        lapic.sendInterProcessorInterrupt(
-            apicID: UInt32(core),
-            vector: 0,
-            deliveryMode: 0b101
-        )
-
-        // vector 0x08 points to address 0x08000 where our assembly "trampoline" code lives
-        lapic.sendInterProcessorInterrupt(
-            apicID: UInt32(core),
-            vector: 0x08,
-            deliveryMode: 0b110
-        )
-    }
 }
