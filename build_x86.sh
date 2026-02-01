@@ -1,6 +1,6 @@
 
 # assemble
-if bash _assemble.sh ; then
+if bash _assemble_x86.sh ; then
     echo ""
 else
     exit 1
@@ -14,7 +14,7 @@ else
 fi
 
 # link
-if bash _link.sh ; then
+if bash _link_x86.sh ; then
     echo ""
 else
     exit 1

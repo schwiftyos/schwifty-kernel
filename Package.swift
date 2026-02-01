@@ -6,6 +6,7 @@ let swiftSettings:[SwiftSetting] = [
     .enableExperimentalFeature("LifetimeDependence"),
     .enableExperimentalFeature("SymbolLinkageMarkers"),
     .enableExperimentalFeature("Extern"),
+    .enableExperimentalFeature("Embedded"),
     .unsafeFlags(["-strict-memory-safety"])
 ]
 

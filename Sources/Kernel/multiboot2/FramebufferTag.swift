@@ -1,20 +1,41 @@
 
-struct FramebufferTag {
-    let type:UInt32
-    let size:UInt32
+@safe
+struct FramebufferTag: ~Copyable {
+    let tagPointer:UnsafeRawPointer
+
+    var type: UInt32 {
+        unsafe tagPointer.load(as: UInt32.self)
+    }
+    var size: UInt32 {
+        unsafe tagPointer.load(fromByteOffset: 4, as: UInt32.self)
+    }
 
     /// Physical start of the screen
-    let address:UInt64
+    var address: UInt64 {
+        unsafe tagPointer.load(fromByteOffset: 8, as: UInt64.self)
+    }
 
     /// Bytes per scanline
-    let pitch:UInt32
-    let width:UInt32
-    let height:UInt32
+    var pitch: UInt32 {
+        unsafe tagPointer.load(fromByteOffset: 16, as: UInt32.self)
+    }
+    var width: UInt32 {
+        unsafe tagPointer.load(fromByteOffset: 20, as: UInt32.self)
+    }
+    var height: UInt32 {
+        unsafe tagPointer.load(fromByteOffset: 24, as: UInt32.self)
+    }
 
     /// Usually 32
-    let bitsPerPixel:UInt8
-    let typeInfo:UInt8
-    let reserved:UInt8
+    var bitsPerPixel: UInt8 {
+        unsafe (tagPointer + 28).load(as: UInt8.self)
+    }
+    var typeInfo: UInt8 {
+       unsafe  (tagPointer + 29).load(as: UInt8.self)
+    }
+    var reserved: UInt8 {
+        unsafe (tagPointer + 30).load(as: UInt8.self)
+    }
 
     // TODO: color info (red, green, blue masks)
 }
@@ -34,11 +55,7 @@ extension FramebufferTag {
 
 // MARK: Draw
 extension FramebufferTag {
-    func drawTest(x: Int, y: Int, color: UInt32) {
-        Self.drawGlyph(SimpleFont.charA, address: address, pitch: pitch, x: x, y: y, color: color)
-    }
-
-    static func drawGlyph<let count: Int>(
+    private static func drawGlyph<let count: Int>(
         _ glyph: [count of UInt8],
         address: UInt64,
         pitch: UInt32,
@@ -68,5 +85,37 @@ extension FramebufferTag {
         color: UInt32
     ) {
         Self.drawGlyph(glyph, address: address, pitch: pitch, x: x, y: y, color: color)
+    }
+}
+
+extension FramebufferTag {
+    func drawStatus() {
+        drawGlyph(SimpleFont.charS, x: 0, y: 1, color: .max)
+        drawGlyph(SimpleFont.charC, x: 1 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charH, x: 2 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charW, x: 3 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charI, x: 4 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charF, x: 5 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charT, x: 6 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charY, x: 7 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charO, x: 8 * 8, y: 1, color: .max)
+        drawGlyph(SimpleFont.charS, x: 9 * 8, y: 1, color: .max)
+
+        switch UInt.bitWidth {
+        case 32:
+            // protected mode
+            drawGlyph(SimpleFont.charP, x: 0, y: 9, color: .max)
+        case 64:
+            // long mode
+            drawGlyph(SimpleFont.charL, x: 0, y: 9, color: .max)
+        default:
+            // unknown mode
+            drawGlyph(SimpleFont.charU, x: 0, y: 9, color: .max)
+        }
+
+        drawGlyph(SimpleFont.charM, x: 2 * 8, y: 9, color: .max)
+        drawGlyph(SimpleFont.charO, x: 3 * 8, y: 9, color: .max)
+        drawGlyph(SimpleFont.charD, x: 4 * 8, y: 9, color: .max)
+        drawGlyph(SimpleFont.charE, x: 5 * 8, y: 9, color: .max)
     }
 }
