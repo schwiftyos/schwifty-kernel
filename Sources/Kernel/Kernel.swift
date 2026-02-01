@@ -16,11 +16,6 @@ public func kmain(
         cpu_halt()
         return 
     }
-    // check if we're in Protected Mode
-    guard UInt.bitWidth == 32 else {
-        cpu_halt()
-        return
-    }
 
     initKernel(infoPointer: infoPointer)
 

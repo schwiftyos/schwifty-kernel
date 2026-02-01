@@ -33,18 +33,8 @@ private func initMultiboot2(infoPointer: UInt) {
             }
             break
         case 8: // framebuffer info
-            let fb = unsafe tagPointer.load(as: FramebufferTag.self)
-            //fb.drawBlueScreen()
-            FramebufferTag.drawGlyph(SimpleFont.charS, address: fb.address, pitch: fb.pitch, x: 0, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charC, address: fb.address, pitch: fb.pitch, x: 1 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charH, address: fb.address, pitch: fb.pitch, x: 2 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charW, address: fb.address, pitch: fb.pitch, x: 3 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charI, address: fb.address, pitch: fb.pitch, x: 4 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charF, address: fb.address, pitch: fb.pitch, x: 5 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charT, address: fb.address, pitch: fb.pitch, x: 6 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charY, address: fb.address, pitch: fb.pitch, x: 7 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charO, address: fb.address, pitch: fb.pitch, x: 8 * 8, y: 1, color: .max)
-            FramebufferTag.drawGlyph(SimpleFont.charS, address: fb.address, pitch: fb.pitch, x: 9 * 8, y: 1, color: .max)
+            let fb = unsafe FramebufferTag(tagPointer: tagPointer)
+            fb.drawStatus()
         default:
             break
         }

@@ -37,23 +37,9 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [ ] RISC-V
 - [ ] WASM
 
-### Heap
-
-- [x] Basic implementation
-- [ ] Thread-safe
-- [ ] Growable
-- [ ] Pages
-- [ ] Fragmentation fix
-- [ ] Segmentation faults
-- [ ] Graceful failure
-- [ ] Virtual Memory
-- [ ] ~O(1) search complexity
-- [ ] ~O(1) allocation complexity
-- [ ] Process isolation
-
 ### Drivers
 
-- [x] VGA
+- [ ] VGA
 - [ ] I/O
   - [ ] Synchronous I/O
   - [ ] Shared Rings (Ring Buffers)
@@ -70,6 +56,7 @@ We have to manually write the boot sequences in assembly for each architecture w
 
 - [x] Protected Mode
 - [ ] Long Mode
+- [ ] Single Address Space (SASOS)
 - [ ] Interrupts
 - [ ] PIT (Programmable Interval Timer)
 - [ ] Schedulers
