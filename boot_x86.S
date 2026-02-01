@@ -118,6 +118,21 @@ cpu_halt:
     call kmain
     hlt
 
+# Standard I/O port helpers
+.global outb
+outb:
+    mov %di, %dx  # port
+    mov %sil, %al # value
+    out %al, %dx
+    ret
+
+.global inb
+inb:
+    mov %di, %dx   # port
+    xor %rax, %rax # clear to ensure clean return
+    in %dx, %al
+    ret
+
 # Page tables
 .section .bss
 .align 4096
