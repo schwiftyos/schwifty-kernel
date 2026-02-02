@@ -7,6 +7,5 @@ struct KernelLogger {
             UART.putchar(char)
         }
         UART.putchar(10)
-        UART.putchar(13)
     }
 }

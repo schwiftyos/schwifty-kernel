@@ -12,3 +12,4 @@ Package.resolved
 *.iso
 generatedAssembly.asm
 generatedByCompiler.txt
+__latestSerialLog.txt
