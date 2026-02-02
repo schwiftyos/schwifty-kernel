@@ -9,7 +9,7 @@ public func kmain(
     infoPointer: UnsafeRawPointer
 ) {
     UART.initialize()
-    initKernel(infoPointer: infoPointer)
+    unsafe initKernel(infoPointer: infoPointer)
 
     logger.log("kmain: halting CPU")
     while true {

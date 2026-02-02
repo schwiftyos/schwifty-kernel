@@ -1,11 +1,12 @@
 
-public func initKernel(
+func initKernel(
     infoPointer: UnsafeRawPointer
 ) {
     logger.log("Kernel: initializing...")
 
-    initMultiboot2(infoPointer: infoPointer)
+    initIDT()
     initHeap()
+    unsafe initMultiboot2(infoPointer: infoPointer)
 
     logger.log("Kernel: initialized")
 }

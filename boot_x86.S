@@ -1,8 +1,13 @@
 
+# Multiboot2
 .set MB2_MAGIC,    0xE85250D6
 .set MB2_ARCH,     0 # 0 = i386 (Protected Mode)
 .set MB2_LENGTH,   (header_end - header_start)
 .set MB2_CHECKSUM, -(MB2_MAGIC + MB2_ARCH + MB2_LENGTH)
+
+# Actual code
+
+# Registers: https://wiki.osdev.org/CPU_Registers_x86-64
 
 .section .multiboot_header
 .align 8
@@ -106,7 +111,7 @@ cpu_halt:
 .code64
 .long_mode_start:
     # flush data segments
-    xor %ax, %ax
+    mov $0x10, %ax
     mov %ax, %ds
     mov %ax, %es
     mov %ax, %ss
@@ -133,6 +138,98 @@ inb:
     in %dx, %al
     ret
 
+.global read_cr2
+read_cr2:
+    mov %cr2, %rax
+    ret
+
+# IDT helpers
+.global load_idtr
+load_idtr:
+    lidt (%rdi) # rdi contains the pointer to the IDTPointer struct
+    ret
+
+# Generic Interrupt Handler Wrapper
+.macro INTERRUPT_HANDLER name, swift_func
+.global \name
+\name:
+    # save all registers
+    push %rax
+    push %rbx
+    push %rcx
+    push %rdx
+    push %rsi
+    push %rdi
+    push %rsp
+    push %rbp
+    push %r8
+    push %r9
+    push %r10
+    push %r11
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+
+    # call the Swift function
+    call \swift_func
+
+    # restore registers
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    pop %r11
+    pop %r10
+    pop %r9
+    pop %r8
+    pop %rbp
+    pop %rsp
+    pop %rdi
+    pop %rsi
+    pop %rdx
+    pop %rcx
+    pop %rbx
+    pop %rax
+    
+    # remove the 8-byte error code pushed by the CPU, then return from interrupt
+    add $8, %rsp
+    iretq
+.endm
+
+# https://wiki.osdev.org/Exceptions
+INTERRUPT_HANDLER handle_exception_division_error, handleExceptionDivisionError
+INTERRUPT_HANDLER handle_exception_debug, handleExceptionDebug
+INTERRUPT_HANDLER handle_exception_nonmaskable_interrupt, handleExceptionNonmaskableInterrupt
+INTERRUPT_HANDLER handle_exception_breakpoint, handleExceptionBreakpoint
+INTERRUPT_HANDLER handle_exception_overflow, handleExceptionOverflow
+INTERRUPT_HANDLER handle_exception_bound_range_exceeded, handleExceptionBoundRangeExceeded
+INTERRUPT_HANDLER handle_exception_invalid_opcode, handleExceptionInvalidOpcode
+INTERRUPT_HANDLER handle_exception_device_not_available, handleExceptionDeviceNotAvailable
+INTERRUPT_HANDLER handle_exception_double_fault, handleExceptionDoubleFault
+INTERRUPT_HANDLER handle_exception_invalid_tss, handleExceptionInvalidTSS
+INTERRUPT_HANDLER handle_exception_segment_not_present, handleExceptionSegmentNotPresent
+INTERRUPT_HANDLER handle_exception_stack_segment_fault, handleExceptionStackSegmentFault
+INTERRUPT_HANDLER handle_exception_general_protection_fault, handleExceptionGeneralProtectionFault
+INTERRUPT_HANDLER handle_exception_page_fault, handleExceptionPageFault
+INTERRUPT_HANDLER handle_exception_15, handleException15
+INTERRUPT_HANDLER handle_exception_x87_floating_point_exception, handleExceptionX87FloatingPointException
+INTERRUPT_HANDLER handle_exception_alignment_check, handleExceptionAlignmentCheck
+INTERRUPT_HANDLER handle_exception_machine_check, handleExceptionMachineCheck
+INTERRUPT_HANDLER handle_exception_simd_floating_point_exception, handleExceptionSIMDFloatingPointException
+INTERRUPT_HANDLER handle_exception_virtualization_exception, handleExceptionVirtualizationException
+INTERRUPT_HANDLER handle_exception_control_protection_exception, handleExceptionControlProtectionException
+INTERRUPT_HANDLER handle_exception_22, handleException22
+INTERRUPT_HANDLER handle_exception_23, handleException23
+INTERRUPT_HANDLER handle_exception_24, handleException24
+INTERRUPT_HANDLER handle_exception_25, handleException25
+INTERRUPT_HANDLER handle_exception_26, handleException26
+INTERRUPT_HANDLER handle_exception_27, handleException27
+INTERRUPT_HANDLER handle_exception_hypervisor_injection_exception, handleExceptionHypervisorInjectionException
+INTERRUPT_HANDLER handle_exception_vmm_communication_exception, handleExceptionVMMCommunicationException
+INTERRUPT_HANDLER handle_exception_security_exception, handleExceptionSecurityException
+INTERRUPT_HANDLER handle_exception_31, handleException31
+
 # Page tables
 .section .bss
 .align 4096
@@ -151,10 +248,13 @@ stack_top:
 
 .section .rodata
 gdt64:
-    .quad 0
+    .quad 0 # null descriptor
+    .set CODE_IDX, . - gdt64
     .quad (1<<43) | (1<<44) | (1<<47) | (1<<53) # (executable | descriptor type | present | 64-bit)
+    .set DATA_DX, . - gdt64
+    .quad (1<<41) | (1<<44) | (1<<47)
 gdt64_end:
 
 gdt64_pointer:
-    .short . - gdt64 - 1
+    .short gdt64_end - gdt64 - 1
     .quad gdt64
