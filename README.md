@@ -56,9 +56,11 @@ We have to manually write the boot sequences in assembly for each architecture w
 
 - [x] Protected Mode
 - [x] Long Mode
+- [x] Global Descriptor Table
+- [x] Interrupt Descriptor Table
+- [ ] SIMD support
 - [ ] Single Address Space (SASOS)
-- [ ] Interrupts
-- [ ] PIT (Programmable Interval Timer)
+- [ ] APIC (Advanced Programmable Interrupt Controller)
 - [ ] Schedulers
 - [ ] Cooperative Scheduling
 - [ ] Threads
