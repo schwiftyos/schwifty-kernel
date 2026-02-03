@@ -119,6 +119,9 @@ cpu_halt:
     mov %ax, %gs
 
     mov $stack_top, %rsp # setup 64-bit stack
+
+    call enable_simd
+
     mov %rsi, %rdi       # multiboot pointer
     call kmain
     hlt
@@ -138,6 +141,21 @@ inb:
     in %dx, %al
     ret
 
+# SIMD
+enable_simd:
+    # Enable SSE (CR0.EM = 0, CR0.MP = 1)
+    mov %cr0, %rax
+    and $0xFFFB, %ax    # Clear EM (bit 2)
+    or $0x2, %ax        # Set MP (bit 1)
+    mov %rax, %cr0
+
+    # Enable SSE/AVX (CR4.OSFXSR = 1, CR4.OSXMMEXCPT = 1)
+    mov %cr4, %rax
+    or $(3 << 9), %rax  # Set bits 9 and 10
+    mov %rax, %cr4
+    ret
+
+# Read CR2
 .global read_cr2
 read_cr2:
     mov %cr2, %rax
