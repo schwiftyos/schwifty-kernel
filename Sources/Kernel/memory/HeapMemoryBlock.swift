@@ -1,7 +1,7 @@
 
 @safe
 struct HeapMemoryBlock {
-    var size:Int
+    var size:UInt64
     var isFree:Bool
     var next:UnsafeMutablePointer<HeapMemoryBlock>?
 }

@@ -3,12 +3,13 @@
 @_extern(c, "load_idtr")
 func load_idtr(_ pointer: UnsafeRawPointer)
 
-nonisolated(unsafe) var idt = UnsafeMutablePointer<IDTEntry>.allocate(capacity: 256)
+nonisolated(unsafe) var idt: UnsafeMutablePointer<IDTEntry>! = nil
 
 /// Initializes the Interrupt Descriptor Table.
 func initIDT() {
     logger.log("IDT: initializing...")
 
+    unsafe idt = UnsafeMutablePointer<IDTEntry>.allocate(capacity: 256)
     unsafe idt.initialize(repeating: .init(handler: 0), count: 256)
     logger.log("IDT: initialized idt")
 

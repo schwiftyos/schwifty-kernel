@@ -12,6 +12,7 @@ public func kmain(
     unsafe initKernel(infoPointer: infoPointer)
 
     testSIMD()
+    KernelHeap.shared.verify()
 
     logger.log("kmain: halting CPU")
     while true {

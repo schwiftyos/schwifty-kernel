@@ -5,5 +5,7 @@ public func swift_deallocObject(
     allocatedSize: Int,
     allocatedAlignMask: Int
 ) {
+    logger.log("swift_deallocObject: executing...")
     unsafe free(object)
+    logger.log("swift_deallocObject: finished")
 }
