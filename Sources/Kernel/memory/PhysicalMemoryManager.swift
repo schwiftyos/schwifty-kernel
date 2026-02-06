@@ -15,14 +15,6 @@ var kernelEndAddress: UInt {
 
 final class PhysicalMemoryManager {
     nonisolated(unsafe) static let shared = PhysicalMemoryManager()
-
-    init() {
-        let kernelStartAddress = kernelStartAddress
-        let kernelEndAddress = kernelEndAddress
-        let kernelSize = kernelEndAddress - kernelStartAddress
-        logger.log("PhysicalMemoryManager: init: kernelStartAddress=X; kernelEndAddress=Y; kernelSize=Z")
-        //logger.log("PhysicalMemoryManager: init: kernelStartAddress=\(kernelStartAddress); kernelEndAddress=\(kernelEndAddress); kernelSize=\(kernelSize)")
-    }
 }
 
 // MARK: mark available
