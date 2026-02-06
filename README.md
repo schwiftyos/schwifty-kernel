@@ -60,6 +60,8 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [x] Interrupt Descriptor Table
 - [x] SIMD support
 - [ ] Single Address Space (SASOS)
+  - [x] allocating and using memory
+  - [ ] freeing memory
 - [ ] APIC (Advanced Programmable Interrupt Controller)
 - [ ] Schedulers
 - [ ] Cooperative Scheduling
