@@ -1,1 +1,1 @@
-qemu-system-x86_64 -cdrom SchwiftyOS.iso -serial file:__latestSerialLog.txt
+qemu-system-x86_64 -cdrom SchwiftyOS.iso -no-reboot -cpu host -accel kvm -serial file:__latestSerialLog.txt

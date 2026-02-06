@@ -5,6 +5,7 @@ func initKernel(
     logger.log("Kernel: initializing...")
 
     initIDT()
+    initSIMD()
     initHeap()
     unsafe initMultiboot2(infoPointer: infoPointer)
 

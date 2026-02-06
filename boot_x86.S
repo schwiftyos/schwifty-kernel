@@ -119,6 +119,7 @@ cpu_halt:
     mov %ax, %gs
 
     mov $stack_top, %rsp # setup 64-bit stack
+
     mov %rsi, %rdi       # multiboot pointer
     call kmain
     hlt
@@ -138,6 +139,63 @@ inb:
     in %dx, %al
     ret
 
+# SIMD
+.global cpuid_low
+cpuid_low:
+    push %rbx
+    mov %rdx, %r8  # return structure
+    mov %rdi, %rax # leaf
+    mov %rsi, %rcx # subleaf
+    cpuid
+
+    # move results into return structure
+    mov %eax, 0(%r8)
+    mov %ebx, 4(%r8)
+    mov %ecx, 8(%r8)
+    mov %edx, 12(%r8)
+    pop %rbx
+    ret
+
+.global enable_simd_sse
+enable_simd_sse:
+    # enable SSE (CR0.EM = 0, CR0.MP = 1)
+    mov %cr0, %rax
+    and $0xFFFB, %ax # clear x87 FPU Emulation (bit 2)
+    or $0x2, %ax     # set Monitor co-processor (bit 1)
+    mov %rax, %cr0
+
+    # enable SSE (CR4.OSFXSR = 1, CR4.OSXMMEXCPT = 1)
+    mov %cr4, %rax
+    or $(3 << 9), %rax # Set bits 9 and 10
+
+    or $(1 << 18), %rax # enable OSXSAVE
+
+    mov %rax, %cr4
+    ret
+
+.global enable_simd_avx
+enable_simd_avx:
+    # set XCR0 bits via xsetbv
+    # bit 0 = x87; 1 = SSE; 2 = AVX
+    xor %rcx, %rcx # XCR0 is index 0
+    mov $0x7, %eax # bits 0, 1, 2
+    xor %edx, %edx # upper 32 bits zero
+    xsetbv
+    ret
+
+.global enable_simd_avx512
+enable_simd_avx512:
+    # assuming osxsave was already called
+    xor %rcx, %rcx  # XCR0
+    
+    # bits needed for AVX-512:
+    # 0: x87; 1: SSE; 2: AVX; 5: Opmask; 6: ZMM_Hi256; 7: Hi16_ZMM
+    mov $0xE7, %eax # 0b11100111
+    xor %edx, %edx
+    xsetbv
+    ret
+
+# Read CR2
 .global read_cr2
 read_cr2:
     mov %cr2, %rax

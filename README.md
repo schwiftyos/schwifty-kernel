@@ -58,7 +58,7 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [x] Long Mode
 - [x] Global Descriptor Table
 - [x] Interrupt Descriptor Table
-- [ ] SIMD support
+- [x] SIMD support
 - [ ] Single Address Space (SASOS)
 - [ ] APIC (Advanced Programmable Interrupt Controller)
 - [ ] Schedulers
