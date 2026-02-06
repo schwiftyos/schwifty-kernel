@@ -21,21 +21,9 @@ func initMultiboot2(infoPointer: UnsafeRawPointer) {
         case 5:
             logger.log("Multiboot2: found BIOS boot device tag")
         case 6:
-            logger.log("Multiboot2: found memory map tag")
-
-            let map = unsafe tagPointer.load(as: MemoryMapTag.self)
-            let entriesCount = (map.size - 16) / map.entrySize
-            
-            // pointer to the first entry
-            var entryPointer = unsafe (tagPointer + 16).assumingMemoryBound(to: MemoryMapEntry.self)
-            
-            for _ in 0..<entriesCount {
-                let entry = unsafe entryPointer.pointee
-                if entry.type == 1 {
-                    // memory is safe to use (entry.baseAddress to (entry.baseAddress + entry.length))
-                }
-                unsafe entryPointer += 1
-            }
+            logger.log("Multiboot2: found memory map tag; loading...")
+            unsafe loadMemoryMapTag(tagPointer: tagPointer)
+            logger.log("Multiboot2: memory map tag loaded")            
         case 7:
             logger.log("Multiboot2: found VBE tag")
         case 8:
@@ -76,4 +64,38 @@ func initMultiboot2(infoPointer: UnsafeRawPointer) {
         offset += (header.size + 7) & ~7
     }
     logger.log("Multiboot2: initialized")
+}
+
+
+// MARK: memory map tag
+private func loadMemoryMapTag(tagPointer: UnsafeRawPointer) {
+    let map = unsafe tagPointer.load(as: MemoryMapTag.self)
+    let entriesCount = (map.size - 16) / map.entrySize
+    var entryPointer = unsafe (tagPointer + 16).assumingMemoryBound(to: MemoryMapEntry.self)
+    for _ in 0..<entriesCount {
+        let entry = unsafe entryPointer.pointee
+        switch entry.type {
+        case 1:
+            let entryStart = entry.baseAddress
+            let entryEnd = entryStart + entry.length
+
+            unsafe PhysicalMemoryManager.shared.markAvailable(base: entry.baseAddress, length: entry.length)
+            var heapStart = entryStart
+            if kernelStartAddress >= entryStart && kernelStartAddress < entryEnd {
+                // align
+                heapStart = (UInt64(kernelEndAddress) + 4095) & ~4095
+            }
+            let heapSize = entryEnd - heapStart
+            if heapSize > 1024 * 1024 * 10 { // 10MiB minimum
+                let heapStartPointer = unsafe UnsafeMutableRawPointer(bitPattern: UInt(heapStart))!
+                unsafe KernelHeap.shared.load(
+                    startAddress: heapStartPointer,
+                    size: heapSize
+                )
+            }
+        default:
+            break
+        }
+        unsafe entryPointer += 1
+    }
 }

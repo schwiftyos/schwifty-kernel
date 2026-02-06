@@ -1,6 +1,7 @@
 
 @_cdecl("memmove")
 public func memmove(_ dest: UnsafeMutableRawPointer, _ src: UnsafeRawPointer, _ n: Int) -> UnsafeMutableRawPointer {
+    logger.log("memmove: executing...")
     let d = unsafe dest.assumingMemoryBound(to: UInt8.self)
     let s = unsafe src.assumingMemoryBound(to: UInt8.self)
     if unsafe d < s {
@@ -12,5 +13,6 @@ public func memmove(_ dest: UnsafeMutableRawPointer, _ src: UnsafeRawPointer, _ 
             unsafe d[i] = s[i]
         }
     }
+    logger.log("memmove: finished")
     return unsafe dest
 }

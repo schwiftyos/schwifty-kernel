@@ -5,14 +5,17 @@ public func posix_memalign(
     _ alignment: Int,
     _ size: Int
 ) -> Int32 {
-    // simple hack for kernel: malloc a bit extra and align the pointer
-    // in a production kernel, we'd use a buddy allocator
-    let totalSize = size + alignment
-    if let raw = unsafe malloc(totalSize) {
-        let addr = Int(bitPattern: raw)
-        let alignedAddr = (addr + alignment - 1) & ~(alignment - 1)
-        unsafe pointer.pointee = UnsafeMutableRawPointer(bitPattern: alignedAddr)
+    logger.log("posix_memalign: executing...")
+    // alignment must be a power of 2 and a multiple of a pointer's size
+    guard unsafe alignment.isPowerOfTwo && alignment >= MemoryLayout<UnsafeRawPointer>.size else {
+        logger.log("posix_memalign: errno 22")
+        return 22 // EINVAL
+    }
+    if let newPointer = unsafe KernelHeap.shared.allocate(size: size, alignment: alignment) {
+        unsafe pointer.pointee = newPointer
+        logger.log("posix_memalign: success")
         return 0
     }
+    logger.log("posix_memalign: errno 12")
     return 12 // ENOMEM
 }
