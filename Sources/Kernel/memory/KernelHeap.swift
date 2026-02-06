@@ -3,7 +3,9 @@
 final class KernelHeap {
     nonisolated(unsafe) static let shared = KernelHeap()
 
-    var head:UnsafeMutablePointer<HeapMemoryBlock>?
+    var _startAddress:UnsafeMutableRawPointer! = nil
+    var _offset = 0
+    var _size = 0
 }
 
 // MARK: load
@@ -12,46 +14,25 @@ extension KernelHeap {
         startAddress: UnsafeMutableRawPointer,
         size: UInt64
     ) {
-        guard unsafe head == nil else {
+        guard _startAddress == nil else {
             logger.log("KernelHeap: load: PANIC: tried loading heap, but its already loaded!")
             cpu_halt()
             return
         }
-        logger.log("KernelHeap: load: loading at X with Y bytes...")
-        //logger.log("KernelHeap: loading at \(UInt(bitPattern: startAddress)) with \(size) bytes...")
-        let firstHead = unsafe startAddress.assumingMemoryBound(to: HeapMemoryBlock.self)
-        unsafe firstHead.pointee = .init(
-            size: size - UInt64(MemoryLayout<HeapMemoryBlock>.stride),
-            isFree: true,
-            next: nil
-        )
-        unsafe head = firstHead
-        logger.log("KernelHeap: loaded")
+        _startAddress = startAddress
+        _size = Int(size)
+
+        logger.log("KernelHeap: loaded at \(UInt(bitPattern: startAddress)) with \(size) bytes...")
     }
 }
 
 // MARK: allocate
 extension KernelHeap {
     /// Tries to allocate the provided number of bytes using 16 byte alignment.
-    func allocate(size: Int) -> UnsafeMutableRawPointer? {
-        logger.log("KernelHeap: allocating X bytes...")
-        //logger.log("KernelHeap: allocating \(size) bytes...")
-
-        // align to 16 bytes for SIMD compatibility
-        let alignedSize = (size + 15) & ~15
-        var current = unsafe head
-        while let block = unsafe current {
-            if unsafe block.pointee.isFree && block.pointee.size >= alignedSize {
-                unsafe block.pointee.isFree = false
-                // TODO: split block if there is significant leftover space so we don't waste memory
-                return unsafe UnsafeMutableRawPointer(block).advanced(by: MemoryLayout<HeapMemoryBlock>.stride)
-            }
-            unsafe current = block.pointee.next
-        }
-        logger.log("KernelHeap: allocate: ran out of memory trying to allocate X bytes")
-        //logger.log("KernelHeap: allocate: ran out of memory trying to allocate \(size) bytes")
-        // out of memory
-        return nil
+    func allocate(
+        size: Int
+    ) -> UnsafeMutableRawPointer? {
+        return allocate(size: size, alignment: 16)
     }
 
     /// Tries to allocate the provided number of byes using the provided alignment.
@@ -61,60 +42,27 @@ extension KernelHeap {
     ) -> UnsafeMutableRawPointer? {
         logger.log("KernelHeap: allocating X bytes with alignment Y...")
         //logger.log("KernelHeap: allocating \(size) bytes with alignment \(alignment)...")
-        var current = unsafe head
-        while let block = unsafe current {
-            let nextBlockPointer = unsafe UnsafeMutableRawPointer(block).advanced(by: MemoryLayout<HeapMemoryBlock>.stride)
-            let nextBlockPointerAddress = Int(bitPattern: nextBlockPointer)
 
-            let alignmentPadding = (alignment - (nextBlockPointerAddress % alignment)) % alignment
-            let totalNeeded = size + alignmentPadding
+        let alignedSize = (size + alignment) & ~alignment
 
-            if unsafe block.pointee.isFree && block.pointee.size >= totalNeeded {
-                unsafe block.pointee.isFree = false
-                
-                // in a Single Address Space, we return the aligned pointer
-                // TODO: for 'free' to work, we'd ideally store the 'original' block start pointer just before the returned address
-                return unsafe nextBlockPointer.advanced(by: alignmentPadding)
-            }
-            unsafe current = block.pointee.next
+        guard _offset + alignedSize < _size else {
+            logger.log("KernelHeap: allocate: ran out of memory trying to allocate X bytes with alignment Y")
+            return nil
         }
-        logger.log("KernelHeap: allocate: ran out of memory trying to allocate X bytes with alignment Y")
-        //logger.log("KernelHeap: allocate: ran out of memory trying to allocate \(size) bytes with alignment \(alignment)")
-        // out of memory
-        return nil
+
+        //logger.log("KernelHeap: allocated \(alignedSize) bytes")
+
+        let p = _startAddress.advanced(by: Int(_offset))
+        _offset += alignedSize
+        return p
     }
 }
 
 // MARK: deallocate
 extension KernelHeap {
     func deallocate(_ pointer: UnsafeMutableRawPointer?) {
-        logger.log("KernelHeap: deallocate: executing...")
-        guard let pointer = unsafe pointer else {
-            logger.log("KernelHeap: deallocate: pointer == nil")
-            return
-        }
-        logger.log("KernelHeap: deallocate: deallocating X...")
-        //logger.log("KernelHeap: deallocate: deallocating \(UInt(bitPattern: pointer))...")
-    
-        // move pointer back to find the header
-        let blockPointer = unsafe (pointer - MemoryLayout<HeapMemoryBlock>.size).assumingMemoryBound(to: HeapMemoryBlock.self)
-        unsafe blockPointer.pointee.isFree = true
-
-        coalesce()
-    }
-
-    /// Merges adjacent free memory blocks.
-    private func coalesce() {
-        var current = unsafe head
-        while let block = unsafe current {
-            if unsafe block.pointee.isFree, let nextBlock = unsafe block.pointee.next, unsafe nextBlock.pointee.isFree {
-                unsafe block.pointee.size += UInt64(MemoryLayout<HeapMemoryBlock>.stride) + nextBlock.pointee.size
-                unsafe block.pointee.next = nextBlock.pointee.next
-                // stay on this block to check if we can also merge the next block
-                continue
-            }
-            unsafe current = block.pointee.next
-        }
+        // TODO: implement
+        logger.log("KernelHeap: deallocate: NOT IMPLEMENTED")
     }
 }
 
