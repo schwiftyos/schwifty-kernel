@@ -5,8 +5,8 @@ func initKernel(
     logger.log("Kernel: initializing...")
 
     initSIMD()
-    unsafe initMultiboot2(infoPointer: infoPointer)
     initIDT()
+    unsafe initMultiboot2(infoPointer: infoPointer)
 
     logger.log("Kernel: initialized")
 }

@@ -6,11 +6,11 @@ nonisolated(unsafe) var KERNEL_PHYSICAL_START:UInt8
 nonisolated(unsafe) var KERNEL_PHYSICAL_END:UInt8
 
 var kernelStartAddress: UInt {
-    UInt(bitPattern: UnsafeRawPointer(&KERNEL_PHYSICAL_START))
+    unsafe UInt(bitPattern: UnsafeRawPointer(&KERNEL_PHYSICAL_START))
 }
 
 var kernelEndAddress: UInt {
-    UInt(bitPattern: UnsafeRawPointer(&KERNEL_PHYSICAL_END))
+    unsafe UInt(bitPattern: UnsafeRawPointer(&KERNEL_PHYSICAL_END))
 }
 
 final class PhysicalMemoryManager {

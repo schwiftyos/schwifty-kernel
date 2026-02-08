@@ -87,11 +87,14 @@ private func loadMemoryMapTag(tagPointer: UnsafeRawPointer) {
             }
             let heapSize = entryEnd - heapStart
             if heapSize > 1024 * 1024 * 10 { // 10MiB minimum
+                logger.log("loadMemoryTag: found enough memory to setup KernelHeap")
                 let heapStartPointer = unsafe UnsafeMutableRawPointer(bitPattern: UInt(heapStart))!
                 unsafe KernelHeap.shared.load(
                     startAddress: heapStartPointer,
                     size: heapSize
                 )
+            } else {
+                logger.log("loadMemoryTag: failed to load KernelHeap")
             }
         default:
             break
