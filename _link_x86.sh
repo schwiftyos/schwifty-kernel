@@ -1,5 +1,5 @@
-
 echo "Linking..."
+
 if ld -no-pie \
         -m elf_x86_64 \
         -T linker_x86.ld \
@@ -8,7 +8,7 @@ if ld -no-pie \
         --gc-sections \
         .build/release/boot_x86.o \
         .build/release/libKernel.a \
-        -o $PWD/iso_root/boot/kernel.bin ; then
+        -o iso_root/boot/kernel.bin ; then
     echo "Linking successful"
 else
     echo "Linking failed"
