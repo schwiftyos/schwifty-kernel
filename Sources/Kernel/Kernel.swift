@@ -7,12 +7,8 @@ public func kmain(
     unsafe initKernel(infoPointer: infoPointer)
 
     testSIMD()
-    KernelHeap.shared.verify(amount: 9)
-
-    logger.log("kmain: halting CPU")
-    while true {
-        cpu_halt()
-    }
+    unsafe KernelHeap.shared.verify(amount: 9)
+    unsafe KernelScheduler.shared.start()
 }
 
 func testSIMD() {
@@ -20,9 +16,8 @@ func testSIMD() {
     let bro = UnsafeMutableRawPointer.allocate(byteCount: 1024, alignment: 16)
     unsafe bro.initializeMemory(as: UInt64.self, repeating: 3, count: 16)
     unsafe clearMemory(at: bro, count: 1024)
+    unsafe bro.deallocate()
     logger.log("testSIMD: success")
-
-    //unsafe bro.deallocate() // TODO: fix | causes reboots
 }
 func clearMemory(
     at address: UnsafeMutableRawPointer,
@@ -36,3 +31,12 @@ func clearMemory(
     }
     logger.log("clearMemory: success")
 }
+
+/*
+func testConcurrency() {
+    logger.log("testConcurrency: testing...")
+    logger.log("testConcurrency: success")
+}
+struct ConcurrencyTest: ~Copyable {
+    func test() async {} // TODO: report: crashes compiler
+}*/

@@ -1,20 +1,14 @@
 
-
 @_extern(c, "load_idtr")
 func load_idtr(_ pointer: UnsafeRawPointer)
 
 typealias IDTPointer = (limit: UInt16, base: UInt64)
 
-nonisolated(unsafe) var idt: UnsafeMutablePointer<IDTEntry>! = nil
+nonisolated(unsafe) var idt = [256 of IDTEntry](repeating: .init(handler: 0))
 
 /// Initializes the Interrupt Descriptor Table.
 func initIDT() {
     logger.log("IDT: initializing...")
-
-    unsafe idt = UnsafeMutablePointer<IDTEntry>.allocate(capacity: 256)
-    unsafe idt.initialize(repeating: .init(handler: 0), count: 256)
-    let idtBaseAddress = UInt(bitPattern: idt)
-    logger.log("IDT: initialized idt at \(idtBaseAddress)")
 
     registerIDTExceptions()
 
@@ -24,13 +18,18 @@ func initIDT() {
         UInt16(0),
         UInt64(0)
     )
-    unsafe withUnsafeMutableBytes(of: &idtr) {
-        $0.storeBytes(of: limit, as: UInt16.self)
-        $0.storeBytes(of: UInt64(idtBaseAddress), toByteOffset: 2, as: UInt64.self)
+    unsafe idt.mutableSpan.withUnsafeBytes { ms in
+        guard let bs = ms.baseAddress else {
+            logger.log("IDT: idt.mutableSpan.withUnsafeBytes baseAddress == nil")
+            return
+        }
+        unsafe withUnsafeMutableBytes(of: &idtr) { i in
+            unsafe i.storeBytes(of: limit, as: UInt16.self)
+            unsafe i.storeBytes(of: UInt64(UInt(bitPattern: bs)), toByteOffset: 2, as: UInt64.self)
+        }
+        logger.log("IDT: calling load_idtr...")
+        unsafe load_idtr(&idtr)
     }
-
-    logger.log("IDT: calling load_idtr...")
-    unsafe load_idtr(&idtr)
 
     logger.log("IDT: initialized")
 }

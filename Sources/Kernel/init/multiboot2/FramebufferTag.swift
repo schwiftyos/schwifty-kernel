@@ -75,7 +75,7 @@ extension FramebufferTag {
         y: Int,
         color: UInt32
     ) {
-        Self.drawGlyph(glyph, screen: address, pitch: pitch, x: x, y: y, color: color)
+        unsafe Self.drawGlyph(glyph, screen: address, pitch: pitch, x: x, y: y, color: color)
     }
 }
 
