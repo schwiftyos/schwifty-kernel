@@ -1,5 +1,6 @@
 
 @_cdecl("memset")
+@_optimize(none)
 public func memset(_ s: UnsafeMutableRawPointer, _ c: Int32, _ n: Int) -> UnsafeMutableRawPointer {
     logger.log("memset: executing...")
     let dest = unsafe s.assumingMemoryBound(to: UInt8.self)

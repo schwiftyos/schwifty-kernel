@@ -7,7 +7,7 @@ if ld -no-pie \
         -nostdlib \
         --gc-sections \
         boot_x86.o \
-        Kernel.o \
+        .build/release/libKernel.a \
         -o $PWD/iso_root/boot/kernel.bin ; then
     echo "Linking successful"
 else

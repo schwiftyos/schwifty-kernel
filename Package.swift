@@ -2,28 +2,29 @@
 
 import PackageDescription
 
-let swiftSettings:[SwiftSetting] = [
-    .enableExperimentalFeature("LifetimeDependence"),
-    .enableExperimentalFeature("SymbolLinkageMarkers"),
-    .enableExperimentalFeature("Extern"),
-    .enableExperimentalFeature("Embedded"),
-    .unsafeFlags(["-strict-memory-safety"])
-]
-
 let package = Package(
     name: "schwifty-kernel",
     products: [
-        .executable(
+        .library(
             name: "Kernel",
+            type: .static,
             targets: ["Kernel"]
         )
     ],
     traits: [
     ],
     targets: [
-        .executableTarget(
+        .target(
             name: "Kernel",
-            swiftSettings: swiftSettings
+            swiftSettings: [
+                .enableExperimentalFeature("Extern"),
+                .enableExperimentalFeature("Embedded"),
+                .strictMemorySafety(),
+                .unsafeFlags([
+                    "-Xfrontend", "-disable-stack-protector",
+                    "-wmo"
+                ])
+            ]
         ),
         .testTarget(
             name: "schwifty-kernelTests",
