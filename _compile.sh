@@ -5,7 +5,7 @@ if swiftly run swift build -c release ; then
 
     # generate assembly
     echo "Generating assembly..."
-    objdump -D Kernel.o > generatedAssembly.asm
+    objdump -D .build/release/libKernel.a > .build/release/generatedAssembly.asm
     echo "Generated assembly"
 else
     echo "Compilation failed"
