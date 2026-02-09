@@ -7,9 +7,6 @@ DerivedData/
 .vscode
 .netrc
 Package.resolved
-*.o
 *.bin
 *.iso
-generatedAssembly.asm
-generatedByCompiler.txt
 __latestSerialLog.txt
