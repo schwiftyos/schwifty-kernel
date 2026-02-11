@@ -36,7 +36,7 @@ header_start:
 .global header_end
 header_end:
 
-# Kernel Entry Point
+# MARK: Kernel Entry Point
 .section .text
 .global _start
 .code32
@@ -103,11 +103,13 @@ _start:
     lgdt gdt64_pointer
     ljmp $8, $.long_mode_start
 
+# MARK: CPU Halt
 .global cpu_halt
 cpu_halt:
 	hlt
 	ret
 
+# MARK: Long Mode
 .code64
 .long_mode_start:
     # flush data segments
@@ -124,7 +126,7 @@ cpu_halt:
     call kmain
     hlt
 
-# Standard I/O port helpers
+# MARK: Standard I/O port helpers
 .global outb
 outb:
     mov %di, %dx  # port
@@ -139,7 +141,29 @@ inb:
     in %dx, %al
     ret
 
-# SIMD
+# MARK: Random
+.global rdrand
+rdrand:
+    # hardware might fail to provide a value if the bus is busy; retry up to 10 times
+    mov $10, %rcx
+
+.rdrand_retry:
+    rdrand %rax         # generate 64-bit random number into RAX
+    jc .rdrand_success  # jump if Carry Flag is set (success)
+    loop .rdrand_retry  # decrement RCX and jump if not zero
+
+    # failure case
+    xor %rax, %rax # clear RAX
+    xor %rdx, %rdx # rdx = 0 (failure)
+    ret
+
+.rdrand_success:
+    # swift expects the value in the pointer and a status code
+    mov %rax, (%rdi) # store the result in the address passed in RDI
+    mov $1, %rax     # return 1 for success
+    ret
+
+# MARK: SIMD
 .global cpuid_low
 cpuid_low:
     push %rbx
@@ -195,19 +219,19 @@ enable_simd_avx512:
     xsetbv
     ret
 
-# Read CR2
+# MARK: Read CR2
 .global read_cr2
 read_cr2:
     mov %cr2, %rax
     ret
 
-# IDT helpers
+# MARK: IDT helpers
 .global load_idtr
 load_idtr:
     lidt (%rdi) # rdi contains the pointer to the IDTPointer struct
     ret
 
-# Generic Interrupt Handler Wrapper
+# MARK: Generic Interrupt Handler Wrapper
 .macro INTERRUPT_HANDLER name, swift_func
 .global \name
 \name:
@@ -288,7 +312,7 @@ INTERRUPT_HANDLER handle_exception_vmm_communication_exception, handleExceptionV
 INTERRUPT_HANDLER handle_exception_security_exception, handleExceptionSecurityException
 INTERRUPT_HANDLER handle_exception_31, handleException31
 
-# Page tables
+# MARK: Page tables
 .section .bss
 .align 4096
 p4_table:
@@ -298,12 +322,13 @@ p3_table:
 p2_table:
     .skip 4096
 
-# Stack
+# MARK: Stack
 .align 16
 stack_bottom:
     .skip 16384 # 16 KiB
 stack_top:
 
+# MARK: GDT
 .section .rodata
 gdt64:
     .quad 0 # null descriptor

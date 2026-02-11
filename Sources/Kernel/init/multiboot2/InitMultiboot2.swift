@@ -69,13 +69,13 @@ func initMultiboot2(infoPointer: UnsafeRawPointer) {
 
 // MARK: memory map tag
 private func loadMemoryMapTag(tagPointer: UnsafeRawPointer) {
-    let map = unsafe tagPointer.load(as: MemoryMapTag.self)
-    let entriesCount = (map.size - 16) / map.entrySize
+    let tag = unsafe tagPointer.load(as: MemoryMapTag.self)
+    let entriesCount = (tag.size - 16) / tag.entrySize
     var entryPointer = unsafe (tagPointer + 16).assumingMemoryBound(to: MemoryMapEntry.self)
     for _ in 0..<entriesCount {
         let entry = unsafe entryPointer.pointee
         switch entry.type {
-        case 1:
+        case MemoryMapEntry.MemoryType.available.rawValue:
             let entryStart = entry.baseAddress
             let entryEnd = entryStart + entry.length
 

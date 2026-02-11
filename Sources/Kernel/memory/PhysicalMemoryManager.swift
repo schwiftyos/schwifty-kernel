@@ -1,9 +1,9 @@
 
 @_silgen_name("_kernel_start")
-nonisolated(unsafe) var KERNEL_PHYSICAL_START:UInt8
+private nonisolated(unsafe) var KERNEL_PHYSICAL_START:UInt8
 
 @_silgen_name("_kernel_end")
-nonisolated(unsafe) var KERNEL_PHYSICAL_END:UInt8
+private nonisolated(unsafe) var KERNEL_PHYSICAL_END:UInt8
 
 var kernelStartAddress: UInt {
     unsafe UInt(bitPattern: UnsafeRawPointer(&KERNEL_PHYSICAL_START))
@@ -40,5 +40,29 @@ extension PhysicalMemoryManager {
 
     private func setBitAsFree(pageIndex: UInt64) {
         // TODO: implement
+    }
+}
+
+// MARK: allocate page
+extension PhysicalMemoryManager {
+    func allocatePage() -> UInt64 {
+        // TODO: implement
+        return 0
+        /*
+        for i in 0..<(totalPages / 64) {
+            let val = bitmap[i]
+            if val != UInt64.max { // if not all 64 bits are 1
+                for bit in 0..<64 {
+                    let mask:UInt64 = 1 << bit
+                    if (val & mask) == 0 {
+                        bitmap[i] |= mask // mark as used
+                        let pageIndex = (i * 64) + bit
+                        return memStart + UInt64(pageIndex * 4096)
+                    }
+                }
+            }
+        }
+        logger.log("PhysicalMemoryManager: out of physical memory!")
+        */
     }
 }
