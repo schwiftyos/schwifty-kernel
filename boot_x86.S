@@ -45,7 +45,9 @@ _start:
     mov $stack_top, %esp # setup stack
     push %ebx            # save multiboot pointer for later use
 
-    # flush page tables
+    call disable_legacy_pic
+
+    # setup page tables
     mov $p4_table, %edi
     mov $3072, %ecx      # (4096 * 3) / 4 bytes
     xor %eax, %eax
@@ -63,7 +65,7 @@ _start:
     or $0b11, %eax
     mov %eax, (p3_table)
 
-    # map P2 to 2MB Huge Pages (identity map first 1GB)
+    # map P2 to 2MB Huge Pages
     xor %ecx, %ecx
 .map_p2:
     mov %ecx, %eax
@@ -74,7 +76,7 @@ _start:
     movl $0, p2_table + 4(,%ecx,8) # write the high 32 bits as zero
 
     inc %ecx
-    cmp $512, %ecx
+    cmp $512, %ecx                 # identity map first 1GB
     jne .map_p2
 
     # enable Long Mode
@@ -122,9 +124,12 @@ cpu_halt:
 
     mov $stack_top, %rsp # setup 64-bit stack
 
+    call enable_local_apic
+
     mov %rsi, %rdi       # multiboot pointer
+    call kinit
+    sti                  # enable interrupts
     call kmain
-    hlt
 
 # MARK: Standard I/O port helpers
 .global outb
@@ -312,15 +317,31 @@ INTERRUPT_HANDLER handle_exception_vmm_communication_exception, handleExceptionV
 INTERRUPT_HANDLER handle_exception_security_exception, handleExceptionSecurityException
 INTERRUPT_HANDLER handle_exception_31, handleException31
 
+# MARK: Disable Legacy PIC
+disable_legacy_pic:
+    mov $0xFF, %al
+    mov $0x21, %dx
+    out %al, %dx
+
+    mov $0xFF, %al
+    mov $0xA1, %dx
+    out %al, %dx
+    ret
+
+# MARK: Enable Local APIC
+enable_local_apic:
+    mov $0x1B, %ecx
+    rdmsr
+    or $(1 << 11), %eax
+    wrmsr
+    ret
+
 # MARK: Page tables
 .section .bss
 .align 4096
-p4_table:
-    .skip 4096
-p3_table:
-    .skip 4096
-p2_table:
-    .skip 4096
+p4_table: .skip 4096
+p3_table: .skip 4096
+p2_table: .skip 4096
 
 # MARK: Stack
 .align 16

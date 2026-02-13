@@ -216,7 +216,7 @@ private func registerException(
 @_cdecl("handleExceptionDivisionError")
 func handleExceptionDivisionError() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: division error!")
+    logger.log("PANIC: division error at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -224,7 +224,7 @@ func handleExceptionDivisionError() {
 @_cdecl("handleExceptionDebug")
 func handleExceptionDebug() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: debug!")
+    logger.log("PANIC: debug at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -232,7 +232,7 @@ func handleExceptionDebug() {
 @_cdecl("handleExceptionNonmaskableInterrupt")
 func handleExceptionNonmaskableInterrupt() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: non-maskable interrupt!")
+    logger.log("PANIC: non-maskable interrupt at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -240,7 +240,7 @@ func handleExceptionNonmaskableInterrupt() {
 @_cdecl("handleExceptionBreakpoint")
 func handleExceptionBreakpoint() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: breakpoint!")
+    logger.log("PANIC: breakpoint at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -248,7 +248,7 @@ func handleExceptionBreakpoint() {
 @_cdecl("handleExceptionOverflow")
 func handleExceptionOverflow() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: overflow!")
+    logger.log("PANIC: overflow at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -256,7 +256,7 @@ func handleExceptionOverflow() {
 @_cdecl("handleExceptionBoundRangeExceeded")
 func handleExceptionBoundRangeExceeded() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: bound range exceeded!")
+    logger.log("PANIC: bound range exceeded at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -264,7 +264,7 @@ func handleExceptionBoundRangeExceeded() {
 @_cdecl("handleExceptionInvalidOpcode")
 func handleExceptionInvalidOpcode() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: invalid opcode!")
+    logger.log("PANIC: invalid opcode at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -272,7 +272,7 @@ func handleExceptionInvalidOpcode() {
 @_cdecl("handleExceptionDeviceNotAvailable")
 func handleExceptionDeviceNotAvailable() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: device not available!")
+    logger.log("PANIC: device not available at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -280,7 +280,7 @@ func handleExceptionDeviceNotAvailable() {
 @_cdecl("handleExceptionDoubleFault")
 func handleExceptionDoubleFault() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: double fault!")
+    logger.log("PANIC: double fault at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -288,7 +288,7 @@ func handleExceptionDoubleFault() {
 @_cdecl("handleExceptionInvalidTSS")
 func handleExceptionInvalidTSS() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: invalid tss!")
+    logger.log("PANIC: invalid tss at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -296,7 +296,7 @@ func handleExceptionInvalidTSS() {
 @_cdecl("handleExceptionSegmentNotPresent")
 func handleExceptionSegmentNotPresent() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: segment not present!")
+    logger.log("PANIC: segment not present at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -304,7 +304,7 @@ func handleExceptionSegmentNotPresent() {
 @_cdecl("handleExceptionStackSegmentFault")
 func handleExceptionStackSegmentFault() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: stack segment fault!")
+    logger.log("PANIC: stack segment fault at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -312,15 +312,16 @@ func handleExceptionStackSegmentFault() {
 @_cdecl("handleExceptionGeneralProtectionFault")
 func handleExceptionGeneralProtectionFault() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: general protection fault!")
+    logger.log("PANIC: general protection fault at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
 
 @_cdecl("handleExceptionPageFault")
+@_optimize(none)
 func handleExceptionPageFault() {
-    //let fa = readFaultAddress()
-    logger.log("PANIC: page fault!")
+    let fa = readFaultAddress()
+    logger.log("PANIC: page fault at address \(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -328,7 +329,7 @@ func handleExceptionPageFault() {
 @_cdecl("handleException15")
 func handleException15() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 15!")
+    logger.log("PANIC: exception 15 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -336,7 +337,7 @@ func handleException15() {
 @_cdecl("handleExceptionX87FloatingPointException")
 func handleExceptionX87FloatingPointException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: x87 floating-point exception!")
+    logger.log("PANIC: x87 floating-point exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -344,7 +345,7 @@ func handleExceptionX87FloatingPointException() {
 @_cdecl("handleExceptionAlignmentCheck")
 func handleExceptionAlignmentCheck() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: alignment check!")
+    logger.log("PANIC: alignment check at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -352,7 +353,7 @@ func handleExceptionAlignmentCheck() {
 @_cdecl("handleExceptionMachineCheck")
 func handleExceptionMachineCheck() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: machine check!")
+    logger.log("PANIC: machine check at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -360,7 +361,7 @@ func handleExceptionMachineCheck() {
 @_cdecl("handleExceptionSIMDFloatingPointException")
 func handleExceptionSIMDFloatingPointException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: simd floating-point exception!")
+    logger.log("PANIC: simd floating-point exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -368,7 +369,7 @@ func handleExceptionSIMDFloatingPointException() {
 @_cdecl("handleExceptionVirtualizationException")
 func handleExceptionVirtualizationException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: virtualization exception!")
+    logger.log("PANIC: virtualization exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -376,7 +377,7 @@ func handleExceptionVirtualizationException() {
 @_cdecl("handleExceptionControlProtectionException")
 func handleExceptionControlProtectionException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: control protection exception!")
+    logger.log("PANIC: control protection exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -384,7 +385,7 @@ func handleExceptionControlProtectionException() {
 @_cdecl("handleException22")
 func handleException22() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 22!")
+    logger.log("PANIC: exception 22 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -392,7 +393,7 @@ func handleException22() {
 @_cdecl("handleException23")
 func handleException23() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 23!")
+    logger.log("PANIC: exception 23 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -400,7 +401,7 @@ func handleException23() {
 @_cdecl("handleException24")
 func handleException24() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 24!")
+    logger.log("PANIC: exception 24 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -408,7 +409,7 @@ func handleException24() {
 @_cdecl("handleException25")
 func handleException25() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 25!")
+    logger.log("PANIC: exception 25 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -416,7 +417,7 @@ func handleException25() {
 @_cdecl("handleException26")
 func handleException26() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 26!")
+    logger.log("PANIC: exception 26 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -424,7 +425,7 @@ func handleException26() {
 @_cdecl("handleException27")
 func handleException27() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 27!")
+    logger.log("PANIC: exception 27 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -432,7 +433,7 @@ func handleException27() {
 @_cdecl("handleExceptionHypervisorInjectionException")
 func handleExceptionHypervisorInjectionException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: hypervisor injection exception!")
+    logger.log("PANIC: hypervisor injection exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -440,7 +441,7 @@ func handleExceptionHypervisorInjectionException() {
 @_cdecl("handleExceptionVMMCommunicationException")
 func handleExceptionVMMCommunicationException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: vmm communication exception!")
+    logger.log("PANIC: vmm communication exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -448,7 +449,7 @@ func handleExceptionVMMCommunicationException() {
 @_cdecl("handleExceptionSecurityException")
 func handleExceptionSecurityException() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: security exception!")
+    logger.log("PANIC: security exception at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }
@@ -456,7 +457,7 @@ func handleExceptionSecurityException() {
 @_cdecl("handleException31")
 func handleException31() {
     //let fa = readFaultAddress()
-    logger.log("PANIC: exception 31!")
+    logger.log("PANIC: exception 31 at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }

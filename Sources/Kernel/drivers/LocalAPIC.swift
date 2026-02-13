@@ -5,7 +5,7 @@
 final class LocalAPIC {
     static nonisolated(unsafe) let shared = LocalAPIC()
 
-    private let baseAddress:UInt64 = 0xFEE00000
+    private let baseAddress:UInt64 = 0xFEE00000 // 4276092928
 
     func endOfInterrupt() {
         logger.log("LocalAPIC: eoi: executing...")
