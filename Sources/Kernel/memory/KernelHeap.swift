@@ -47,6 +47,7 @@ extension KernelHeap {
         }
         let p = unsafe _startAddress.advanced(by: Int(_offset))
         _offset += alignedSize
+        //logger.log("KernelHeap: allocate: allocated X bytes with Y alignment")
         return unsafe p
     }
 }
@@ -66,18 +67,15 @@ extension KernelHeap {
     
         // test class allocation
         let testObject = KernelTest(value: 42)
-        let testObjectAddr = unsafe withUnsafePointer(to: testObject) { UInt(bitPattern: $0) }
-        logger.log("KernelHeap: verify: testObject allocated at memory address: \(testObjectAddr)")
-        //logger.log("KernelHeap: verify: testObject allocated at memory address: \(testObjectAddr)")
+        let testObjectPointer = unsafe Unmanaged.passUnretained(testObject).toOpaque()
+        logger.log("KernelHeap: verify: testObject allocated at memory address: \(UInt(bitPattern: testObjectPointer))")
         
         // test dynamic collection
-        var testArray = [Int]()
-        for i in 0..<amount {
-            testArray.append(i * 10)
+        let testArray = UnsafeMutableBufferPointer<Int>.allocate(capacity: 10)
+        for i in 0..<10 {
+            unsafe testArray[i] = i * 10
         }
-        let testArrayAddr = unsafe withUnsafePointer(to: testArray) { UInt(bitPattern: $0) }
-        logger.log("KernelHeap: verify: Array at \(testArrayAddr) contains \(testArray.count) elements.")
-        //logger.log("KernelHeap: verify: Array at \(testArrayAddr) contains \(testArray.count) elements.")
+        logger.log("KernelHeap: verify: Array at \(UInt(bitPattern: testArray.baseAddress!)) contains \(testArray.count) elements.")
         
         // test alignment (crucial for SIMD)
         guard let rawPtr = unsafe malloc(16) else {
