@@ -60,30 +60,28 @@ _start:
     or $0b11, %eax
     mov %eax, (p4_table)
 
-    # map P3[0..3] -> p2_tables[0..3]; linking 4GiB of virtual space
+    # map P3[0..3] -> p2_tables[0..3]; linking 4 GiB of virtual space
     mov $4, %ecx
     mov $p3_table, %edi
     mov $p2_tables, %eax
 .link_p3:
     or $0b11, %eax
     mov %eax, (%edi)
-    add $4096, %eax # Point to next p2 table
-    add $8, %edi    # Next p3 entry
+    add $4096, %eax # point to next p2 table
+    add $8, %edi    # next p3 entry
     loop .link_p3
 
-    # map 2048 entries (4 * 512) in the p2_tables to 2MB Huge Pages
-    mov $2048, %ecx 
-    xor %ebx, %ebx  # Physical address counter
+    mov $2048, %ecx # map 2048 entries (4 * 512) in the p2_tables to 2 MiB Huge Pages
+    xor %ebx, %ebx  # physical address counter
 .map_p2_expanded:
     mov %ebx, %eax
     shl $21, %eax
-    or $0b10000011, %eax           # present | writable | huge
-    
-    # Use ecx to calculate offset in p2_tables
-    # (Total entries 2048 - current ecx) * 8
+    or $0b10000011, %eax # present | writable | huge
+
+    # use ecx to calculate offset in p2_tables; total entries 2048 - current ecx) * 8
     mov $2048, %edx
     sub %ecx, %edx
-    
+
     mov %eax, p2_tables(,%edx,8)
     movl $0, p2_tables + 4(,%edx,8)
 
@@ -168,7 +166,7 @@ rdrand:
     jc .rdrand_success  # jump if Carry Flag is set (success)
     loop .rdrand_retry  # decrement RCX and jump if not zero
 
-    # failure case
+    # failure
     xor %rax, %rax # clear RAX
     xor %rdx, %rdx # rdx = 0 (failure)
     ret
@@ -198,16 +196,13 @@ cpuid_low:
 
 .global enable_simd_sse
 enable_simd_sse:
-    # enable SSE (CR0.EM = 0, CR0.MP = 1)
-    mov %cr0, %rax
-    and $0xFFFB, %ax # clear x87 FPU Emulation (bit 2)
-    or $0x2, %ax     # set Monitor co-processor (bit 1)
+    mov %cr0, %rax      # enable SSE (CR0.EM = 0, CR0.MP = 1)
+    and $0xFFFB, %ax    # clear x87 FPU Emulation (bit 2)
+    or $0x2, %ax        # set Monitor co-processor (bit 1)
     mov %rax, %cr0
 
-    # enable SSE (CR4.OSFXSR = 1, CR4.OSXMMEXCPT = 1)
-    mov %cr4, %rax
-    or $(3 << 9), %rax # Set bits 9 and 10
-
+    mov %cr4, %rax      # enable SSE (CR4.OSFXSR = 1, CR4.OSXMMEXCPT = 1)
+    or $(3 << 9), %rax  # set bits 9 and 10
     or $(1 << 18), %rax # enable OSXSAVE
 
     mov %rax, %cr4
