@@ -77,7 +77,7 @@ extension PhysicalMemoryManager {
                         unsafe bitmap[i] |= mask
                         let pageIndex = (i * 64) + bit
                         let address = UInt64(pageIndex * 4096)
-                        logger.log("PhysicalMemoryManager: allocated page (\(address))")
+                        logger.log("PhysicalMemoryManager: allocated page (\\(address))")
                         return unsafe bitmap.advanced(by: Int(address))
                     }
                 }

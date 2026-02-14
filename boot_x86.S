@@ -1,11 +1,122 @@
 
+# MARK: Macros
+
+
+
+
+
+# MARK: Disable Legacy PIC
+.macro DISABLE_LEGACY_PIC
+    mov $0xFF, %al
+    mov $0x21, %dx
+    out %al, %dx
+
+    mov $0xFF, %al
+    mov $0xA1, %dx
+    out %al, %dx
+.endm
+
+# MARK: Enable Local APIC
+.macro ENABLE_LOCAL_APIC
+    mov $0x1B, %ecx
+    rdmsr
+    or $(1 << 11), %eax
+    wrmsr
+.endm
+
+# MARK: Save registers
+.macro SAVE_REGISTERS
+    push %rax
+    push %rbx
+    push %rcx
+    push %rdx
+    push %rsi
+    push %rdi
+    push %rsp
+    push %rbp
+    push %r8
+    push %r9
+    push %r10
+    push %r11
+    push %r12
+    push %r13
+    push %r14
+    push %r15
+.endm
+
+# MARK: Restore registers
+.macro RESTORE_REGISTERS
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    pop %r11
+    pop %r10
+    pop %r9
+    pop %r8
+    pop %rbp
+    pop %rsp
+    pop %rdi
+    pop %rsi
+    pop %rdx
+    pop %rcx
+    pop %rbx
+    pop %rax
+.endm
+
+# MARK: Generic Interrupt Handler Wrapper
+.macro INTERRUPT_HANDLER name, swift_func
+.global \name
+\name:
+    SAVE_REGISTERS
+    call \swift_func
+    RESTORE_REGISTERS
+    
+    # remove the 8-byte error code pushed by the CPU, then return from interrupt
+    add $8, %rsp
+    iretq
+.endm
+
+# https://wiki.osdev.org/Exceptions
+INTERRUPT_HANDLER handle_exception_division_error, handleExceptionDivisionError
+INTERRUPT_HANDLER handle_exception_debug, handleExceptionDebug
+INTERRUPT_HANDLER handle_exception_nonmaskable_interrupt, handleExceptionNonmaskableInterrupt
+INTERRUPT_HANDLER handle_exception_breakpoint, handleExceptionBreakpoint
+INTERRUPT_HANDLER handle_exception_overflow, handleExceptionOverflow
+INTERRUPT_HANDLER handle_exception_bound_range_exceeded, handleExceptionBoundRangeExceeded
+INTERRUPT_HANDLER handle_exception_invalid_opcode, handleExceptionInvalidOpcode
+INTERRUPT_HANDLER handle_exception_device_not_available, handleExceptionDeviceNotAvailable
+INTERRUPT_HANDLER handle_exception_double_fault, handleExceptionDoubleFault
+INTERRUPT_HANDLER handle_exception_invalid_tss, handleExceptionInvalidTSS
+INTERRUPT_HANDLER handle_exception_segment_not_present, handleExceptionSegmentNotPresent
+INTERRUPT_HANDLER handle_exception_stack_segment_fault, handleExceptionStackSegmentFault
+INTERRUPT_HANDLER handle_exception_general_protection_fault, handleExceptionGeneralProtectionFault
+INTERRUPT_HANDLER handle_exception_page_fault, handleExceptionPageFault
+INTERRUPT_HANDLER handle_exception_15, handleException15
+INTERRUPT_HANDLER handle_exception_x87_floating_point_exception, handleExceptionX87FloatingPointException
+INTERRUPT_HANDLER handle_exception_alignment_check, handleExceptionAlignmentCheck
+INTERRUPT_HANDLER handle_exception_machine_check, handleExceptionMachineCheck
+INTERRUPT_HANDLER handle_exception_simd_floating_point_exception, handleExceptionSIMDFloatingPointException
+INTERRUPT_HANDLER handle_exception_virtualization_exception, handleExceptionVirtualizationException
+INTERRUPT_HANDLER handle_exception_control_protection_exception, handleExceptionControlProtectionException
+INTERRUPT_HANDLER handle_exception_22, handleException22
+INTERRUPT_HANDLER handle_exception_23, handleException23
+INTERRUPT_HANDLER handle_exception_24, handleException24
+INTERRUPT_HANDLER handle_exception_25, handleException25
+INTERRUPT_HANDLER handle_exception_26, handleException26
+INTERRUPT_HANDLER handle_exception_27, handleException27
+INTERRUPT_HANDLER handle_exception_hypervisor_injection_exception, handleExceptionHypervisorInjectionException
+INTERRUPT_HANDLER handle_exception_vmm_communication_exception, handleExceptionVMMCommunicationException
+INTERRUPT_HANDLER handle_exception_security_exception, handleExceptionSecurityException
+INTERRUPT_HANDLER handle_exception_31, handleException31
+
 # Multiboot2
 .set MB2_MAGIC,    0xE85250D6
 .set MB2_ARCH,     0 # 0 = i386 (Protected Mode)
 .set MB2_LENGTH,   (header_end - header_start)
 .set MB2_CHECKSUM, -(MB2_MAGIC + MB2_ARCH + MB2_LENGTH)
 
-# Actual code
+# MARK: Actual code
 
 # Registers: https://wiki.osdev.org/CPU_Registers_x86-64
 
@@ -45,7 +156,7 @@ _start:
     mov $stack_top, %esp # setup stack
     push %ebx            # save multiboot pointer for later use
 
-    call disable_legacy_pic
+    DISABLE_LEGACY_PIC
 
     # setup page tables
     mov $p4_table, %edi
@@ -133,12 +244,13 @@ cpu_halt:
 
     mov $stack_top, %rsp # setup 64-bit stack
 
-    call enable_local_apic
+    ENABLE_LOCAL_APIC
 
     mov %rsi, %rdi       # multiboot pointer
     call kinit
     sti                  # enable interrupts
     call kmain
+    hlt
 
 # MARK: Standard I/O port helpers
 .global outb
@@ -249,105 +361,14 @@ invlpg:
     invlpg (%rdi)
     ret
 
-# MARK: Generic Interrupt Handler Wrapper
-.macro INTERRUPT_HANDLER name, swift_func
-.global \name
-\name:
-    # save all registers
-    push %rax
-    push %rbx
-    push %rcx
-    push %rdx
-    push %rsi
-    push %rdi
-    push %rsp
-    push %rbp
-    push %r8
-    push %r9
-    push %r10
-    push %r11
-    push %r12
-    push %r13
-    push %r14
-    push %r15
-
-    # call the Swift function
-    call \swift_func
-
-    # restore registers
-    pop %r15
-    pop %r14
-    pop %r13
-    pop %r12
-    pop %r11
-    pop %r10
-    pop %r9
-    pop %r8
-    pop %rbp
-    pop %rsp
-    pop %rdi
-    pop %rsi
-    pop %rdx
-    pop %rcx
-    pop %rbx
-    pop %rax
-    
-    # remove the 8-byte error code pushed by the CPU, then return from interrupt
-    add $8, %rsp
+# MARK: Keyboard
+.global keyboard_handler
+keyboard_handler:
+    SAVE_REGISTERS
+    mov $33, %rdi
+    call keyboard_interrupt_handler
+    RESTORE_REGISTERS
     iretq
-.endm
-
-# https://wiki.osdev.org/Exceptions
-INTERRUPT_HANDLER handle_exception_division_error, handleExceptionDivisionError
-INTERRUPT_HANDLER handle_exception_debug, handleExceptionDebug
-INTERRUPT_HANDLER handle_exception_nonmaskable_interrupt, handleExceptionNonmaskableInterrupt
-INTERRUPT_HANDLER handle_exception_breakpoint, handleExceptionBreakpoint
-INTERRUPT_HANDLER handle_exception_overflow, handleExceptionOverflow
-INTERRUPT_HANDLER handle_exception_bound_range_exceeded, handleExceptionBoundRangeExceeded
-INTERRUPT_HANDLER handle_exception_invalid_opcode, handleExceptionInvalidOpcode
-INTERRUPT_HANDLER handle_exception_device_not_available, handleExceptionDeviceNotAvailable
-INTERRUPT_HANDLER handle_exception_double_fault, handleExceptionDoubleFault
-INTERRUPT_HANDLER handle_exception_invalid_tss, handleExceptionInvalidTSS
-INTERRUPT_HANDLER handle_exception_segment_not_present, handleExceptionSegmentNotPresent
-INTERRUPT_HANDLER handle_exception_stack_segment_fault, handleExceptionStackSegmentFault
-INTERRUPT_HANDLER handle_exception_general_protection_fault, handleExceptionGeneralProtectionFault
-INTERRUPT_HANDLER handle_exception_page_fault, handleExceptionPageFault
-INTERRUPT_HANDLER handle_exception_15, handleException15
-INTERRUPT_HANDLER handle_exception_x87_floating_point_exception, handleExceptionX87FloatingPointException
-INTERRUPT_HANDLER handle_exception_alignment_check, handleExceptionAlignmentCheck
-INTERRUPT_HANDLER handle_exception_machine_check, handleExceptionMachineCheck
-INTERRUPT_HANDLER handle_exception_simd_floating_point_exception, handleExceptionSIMDFloatingPointException
-INTERRUPT_HANDLER handle_exception_virtualization_exception, handleExceptionVirtualizationException
-INTERRUPT_HANDLER handle_exception_control_protection_exception, handleExceptionControlProtectionException
-INTERRUPT_HANDLER handle_exception_22, handleException22
-INTERRUPT_HANDLER handle_exception_23, handleException23
-INTERRUPT_HANDLER handle_exception_24, handleException24
-INTERRUPT_HANDLER handle_exception_25, handleException25
-INTERRUPT_HANDLER handle_exception_26, handleException26
-INTERRUPT_HANDLER handle_exception_27, handleException27
-INTERRUPT_HANDLER handle_exception_hypervisor_injection_exception, handleExceptionHypervisorInjectionException
-INTERRUPT_HANDLER handle_exception_vmm_communication_exception, handleExceptionVMMCommunicationException
-INTERRUPT_HANDLER handle_exception_security_exception, handleExceptionSecurityException
-INTERRUPT_HANDLER handle_exception_31, handleException31
-
-# MARK: Disable Legacy PIC
-disable_legacy_pic:
-    mov $0xFF, %al
-    mov $0x21, %dx
-    out %al, %dx
-
-    mov $0xFF, %al
-    mov $0xA1, %dx
-    out %al, %dx
-    ret
-
-# MARK: Enable Local APIC
-enable_local_apic:
-    mov $0x1B, %ecx
-    rdmsr
-    or $(1 << 11), %eax
-    wrmsr
-    ret
 
 # MARK: Page tables
 .section .bss

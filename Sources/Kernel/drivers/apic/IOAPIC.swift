@@ -2,14 +2,22 @@
 // https://wiki.osdev.org/IOAPIC
 
 /// I/O Advanced Programmable Interrupt Controller.
+@safe
 final class IOAPIC {
     static nonisolated(unsafe) let shared = IOAPIC()
 
-    private let baseAddress:UInt64 = 0xFEC00000
+    private var baseAddress:UnsafeMutablePointer<UInt32>! //:UInt64 = 0xFEC00000
 
     // Memory-mapped register offsets
-    private let ioregsel:UInt32 = 0x00
-    private let iowin:UInt32    = 0x10
+    private let ioregsel = 0x00
+    private let iowin    = 0x10
+}
+
+// MARK: initialize
+extension IOAPIC {
+    func initialize(baseAddress: UnsafeMutablePointer<UInt32>) {
+        unsafe self.baseAddress = baseAddress
+    }
 }
 
 // MARK: Register
@@ -26,12 +34,18 @@ extension IOAPIC {
 extension IOAPIC {
     private func write(
         _ data: UInt32,
-        to index: UInt8
+        to register: UInt8
     ) {
-        let selPtr = unsafe UnsafeMutablePointer<UInt32>(bitPattern: UInt(baseAddress + UInt64(ioregsel)))
-        let winPtr = unsafe UnsafeMutablePointer<UInt32>(bitPattern: UInt(baseAddress + UInt64(iowin)))
-        unsafe selPtr?.pointee = UInt32(index)
-        unsafe winPtr?.pointee = data
+        unsafe baseAddress.advanced(by: (ioregsel / 4)).pointee = UInt32(register)
+        unsafe baseAddress.advanced(by: (iowin / 4)).pointee = data
+    }
+}
+
+// MARK: Read
+extension IOAPIC {
+    private func read(register: UInt8) -> UInt32 {
+        unsafe baseAddress.advanced(by: (ioregsel / 4)).pointee = UInt32(register)
+        return unsafe baseAddress.advanced(by: (iowin / 4)).pointee
     }
 }
 
@@ -51,13 +65,11 @@ extension IOAPIC {
         let lowIndex = Register.redirectionTableBase.rawValue + (irq * 2)
         let highIndex = lowIndex + 1
 
-        // lower 32 bits = vector, delivery mode (000 = fixed), destination mode (0 = physical), unmask (0 = enabled)
-        let lowValue = UInt32(vector) 
-
         // upper 32 bits = destination (APIC ID of the core)
         let highValue = UInt32(cpuID) << 24
 
-        write(lowValue, to: lowIndex)
+        // lower 32 bits = vector, delivery mode (000 = fixed), destination mode (0 = physical), unmask (0 = enabled)
+        write(UInt32(vector), to: lowIndex)
         write(highValue, to: highIndex)
     }
 }
@@ -77,7 +89,7 @@ extension IOAPIC {
     private func configureKeyboard() {
         logger.log("IOAPIC: configuring keyboard...")
         // Route IRQ 1 (Keyboard) to IDT Vector 33 (0x21), target CPU 0
-        configure(irq: 1, vector: 0x21, cpuID: 0)
+        configure(irq: 1, vector: 33, cpuID: 0)
         logger.log("IOAPIC: configured keyboard")
     }
 }

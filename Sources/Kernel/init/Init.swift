@@ -9,6 +9,7 @@ public func kinit(
 
     initSIMD()
     initIDT()
+
     if hasRDRANDSupport() {
         logger.log("kinit: RDRAND supported")
     } else {
@@ -16,6 +17,7 @@ public func kinit(
     }
 
     unsafe PhysicalMemoryManager.shared.initialize(bitmapAddress: 0x200000)
+    unsafe LocalAPIC.shared.configure()
     unsafe initMultiboot2(infoPointer: infoPointer)
 
     let pml4Pointer = unsafe UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!
@@ -28,7 +30,6 @@ public func kinit(
                 | PageTableManager.Flag.cacheDisable.rawValue
                 | PageTableManager.Flag.writeThrough.rawValue
     )
-    unsafe LocalAPIC.shared.configure()
 
     logger.log("kinit: executed")
 }

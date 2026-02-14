@@ -42,8 +42,10 @@ func initMultiboot2(infoPointer: UnsafeRawPointer) {
             logger.log("Multiboot2: found SMBIOS tag")
         case 14:
             logger.log("Multiboot2: found ACPI old RSDP tag")
+            unsafe setupACPI(rsdpAddress: tagPointer.advanced(by: 8))
         case 15:
             logger.log("Multiboot2: found ACPI new RSDP tag")
+            unsafe setupACPI(rsdpAddress: tagPointer.advanced(by: 8))
         case 16:
             logger.log("Multiboot2: found networking information tag")
         case 17:
@@ -87,18 +89,49 @@ private func loadMemoryMapTag(tagPointer: UnsafeRawPointer) {
             }
             let heapSize = entryEnd - heapStart
             if heapSize > 1024 * 1024 * 10 { // 10MiB minimum
-                logger.log("loadMemoryTag: found enough memory to setup KernelHeap")
+                logger.log("Multiboot2: loadMemoryTag: found enough memory to setup KernelHeap")
                 let heapStartPointer = unsafe UnsafeMutableRawPointer(bitPattern: UInt(heapStart))!
                 unsafe KernelHeap.shared.load(
                     startAddress: heapStartPointer,
                     size: heapSize
                 )
             } else {
-                logger.log("loadMemoryTag: failed to load KernelHeap")
+                logger.log("Multiboot2: loadMemoryTag: failed to load KernelHeap")
             }
         default:
             break
         }
         unsafe entryPointer += 1
     }
+}
+
+// MARK: Setup ACPI
+private func setupACPI(rsdpAddress: UnsafeRawPointer) {
+    logger.log("Multiboot2: setupACPI: executing...")
+    // check validity; "RSD PTR " in hex (little endian) = 0x2052545020445352
+    let signature = unsafe rsdpAddress.assumingMemoryBound(to: UInt64.self).pointee
+    guard signature == 0x2052545020445352 else {
+        logger.log("Multiboot2: setupACPI: Invalid RSDP signature")
+        return
+    }
+    let revision = unsafe rsdpAddress.load(fromByteOffset: 15, as: UInt8.self)
+    var madt:UnsafePointer<MADTTable>? = nil
+    if revision == 0 {
+        logger.log("Multiboot2: setupACPI: Version 1.0 detected")
+        let rsdtAddress = unsafe rsdpAddress.load(fromByteOffset: 16, as: UInt32.self)
+        unsafe madt = madtFind(rsdtAddress: UInt64(rsdtAddress))
+    } else {
+        logger.log("Multiboot2: setupACPI: Version 2.0+ detected")
+        let xsdtAddress = unsafe rsdpAddress.load(fromByteOffset: 24, as: UInt64.self)
+        unsafe madt = madtFind(rsdtAddress: xsdtAddress)
+    }
+    guard let madt = unsafe madt else {
+        logger.log("Multiboot2: setupACPI: Could not find MADT table")
+        return
+    }
+    if let ioapicAddress = unsafe madtParse(madt: madt) {
+        unsafe IOAPIC.shared.initialize(baseAddress: UnsafeMutablePointer<UInt32>(bitPattern: UInt(ioapicAddress))!)
+        unsafe IOAPIC.shared.configure()
+    }
+    logger.log("Multiboot2: setupACPI: executed")
 }
