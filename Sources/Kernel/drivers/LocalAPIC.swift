@@ -25,6 +25,10 @@ extension LocalAPIC {
         case icrLow         = 0x300
         case icrHigh        = 0x310
         case lvtTimer       = 0x320
+
+        case timerDivideConfig = 0x3E0
+        case timerInitialCount = 0x380
+        case timerCurrentCount = 0x390
     }
 }
 
@@ -57,5 +61,30 @@ extension LocalAPIC {
         write(0, to: .taskPriority)
 
         logger.log("LocalAPIC: configured")
+    }
+}
+
+// MARK: test timer
+extension LocalAPIC {
+    func testTimer() {
+        logger.log("LocalAPIC: testTimer: executing...")
+
+        // set the Divide Configuration Register to divide by 16
+        write(0x03, to: .timerDivideConfig)
+
+        // set the Initial Count to a high value
+        write(0xFFFFFFFF, to: .timerInitialCount)
+
+        // wait a bit
+        for _ in 0..<1000000 {
+            _ = 1 + 1
+        }
+
+        let count = read(.timerCurrentCount)
+        if count < 0xFFFFFFFF {
+            logger.log("LocalAPIC: testTimer: ticking; current: \(count)")
+        } else {
+            logger.log("LocalAPIC: testTimer: timer is stuck!")
+        }
     }
 }

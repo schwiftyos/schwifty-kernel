@@ -60,24 +60,35 @@ _start:
     or $0b11, %eax
     mov %eax, (p4_table)
 
-    # map P3 to P2
-    mov $p2_table, %eax
+    # map P3[0..3] -> p2_tables[0..3]; linking 4GiB of virtual space
+    mov $4, %ecx
+    mov $p3_table, %edi
+    mov $p2_tables, %eax
+.link_p3:
     or $0b11, %eax
-    mov %eax, (p3_table)
+    mov %eax, (%edi)
+    add $4096, %eax # Point to next p2 table
+    add $8, %edi    # Next p3 entry
+    loop .link_p3
 
-    # map P2 to 2MB Huge Pages
-    xor %ecx, %ecx
-.map_p2:
-    mov %ecx, %eax
+    # map 2048 entries (4 * 512) in the p2_tables to 2MB Huge Pages
+    mov $2048, %ecx 
+    xor %ebx, %ebx  # Physical address counter
+.map_p2_expanded:
+    mov %ebx, %eax
     shl $21, %eax
-    or $0b10000011, %eax           # (present | writable | huge)
+    or $0b10000011, %eax           # present | writable | huge
+    
+    # Use ecx to calculate offset in p2_tables
+    # (Total entries 2048 - current ecx) * 8
+    mov $2048, %edx
+    sub %ecx, %edx
+    
+    mov %eax, p2_tables(,%edx,8)
+    movl $0, p2_tables + 4(,%edx,8)
 
-    mov %eax, p2_table(,%ecx,8)    # write the low 32 bits
-    movl $0, p2_table + 4(,%ecx,8) # write the high 32 bits as zero
-
-    inc %ecx
-    cmp $512, %ecx                 # identity map first 1GB
-    jne .map_p2
+    inc %ebx
+    loop .map_p2_expanded
 
     # enable Long Mode
 
@@ -233,7 +244,14 @@ read_cr2:
 # MARK: IDT helpers
 .global load_idtr
 load_idtr:
-    lidt (%rdi) # rdi contains the pointer to the IDTPointer struct
+    lidt (%rdi) # rdi = pointer to the IDTPointer struct
+    ret
+
+# MARK: TLV Invalidation (invlpg)
+.global invlpg
+invlpg:
+    # rdi = virtual address to invalidate
+    invlpg (%rdi)
     ret
 
 # MARK: Generic Interrupt Handler Wrapper
@@ -341,7 +359,7 @@ enable_local_apic:
 .align 4096
 p4_table: .skip 4096
 p3_table: .skip 4096
-p2_table: .skip 4096
+p2_tables: .skip 4096 * 4 # 4 pages, 1 GiB each (4GiB total)
 
 # MARK: Stack
 .align 16

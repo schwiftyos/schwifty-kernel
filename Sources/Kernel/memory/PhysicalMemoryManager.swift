@@ -13,8 +13,26 @@ var kernelEndAddress: UInt {
     unsafe UInt(bitPattern: UnsafeRawPointer(&KERNEL_PHYSICAL_END))
 }
 
+@safe
 final class PhysicalMemoryManager {
     nonisolated(unsafe) static let shared = PhysicalMemoryManager()
+
+    // for our Single Address Space covering 4 GiB, we need: (4 GiB / 4096) bits ((1,048,576 / 8) = 131,072 bytes [128 KiB for bitmap])
+    private nonisolated(unsafe) var bitmap:UnsafeMutablePointer<UInt64>!
+    private let totalPages:UInt64 = 1_048_576
+}
+
+// MARK: initialize
+extension PhysicalMemoryManager {
+    func initialize(bitmapAddress: UInt64) {
+        logger.log("PhysicalMemoryManager: initializing...")
+
+        unsafe bitmap = UnsafeMutablePointer<UInt64>(bitPattern: UInt(bitmapAddress))
+        // initialize all as used (1); markAvailable will free them
+        unsafe bitmap.initialize(repeating: UInt64.max, count: Int(totalPages / 64))
+
+        logger.log("PhysicalMemoryManager: initialized")
+    }
 }
 
 // MARK: mark available
@@ -24,45 +42,48 @@ extension PhysicalMemoryManager {
         length: UInt64
     ) {
         logger.log("PhysicalMemoryManager: attempting to mark X bytes available beginning at Y...")
-        //logger.log("PhysicalMemoryManager: attempting to mark \(length) bytes available beginning at \(base)...")
-        var marked = 0
-        for addr in stride(from: base, to: base + length, by: 4096) {
-            if addr >= kernelStartAddress && addr < kernelEndAddress {
-                // don't manage the memory where the kernel is actually running
-                continue 
+
+        let startPage = base / 4096
+        let pageCount = length / 4096
+        for i in 0..<pageCount {
+            let address = (startPage + i) * 4096
+            if address >= kernelStartAddress && address < kernelEndAddress {
+                continue
             }
-            self.setBitAsFree(pageIndex: addr / 4096)
-            marked += 1
+            // TODO: protect the bitmap if its in the available range (assumes bitmap is 128 KiB)?
+            setBitAsFree(pageIndex: startPage + i)
         }
-        logger.log("PhysicalMemoryManager: marked Z as available")
-        //logger.log("PhysicalMemoryManager: marked \(marked) as available")
+
+        logger.log("PhysicalMemoryManager: marked X bytes available beginning at Y")
     }
 
     private func setBitAsFree(pageIndex: UInt64) {
-        // TODO: implement
+        let i = Int(pageIndex / 64)
+        let bit = Int(pageIndex % 64)
+        unsafe bitmap[i] &= ~(1 << bit)
     }
 }
 
 // MARK: allocate page
 extension PhysicalMemoryManager {
-    func allocatePage() -> UInt64 {
-        // TODO: implement
-        return 0
-        /*
-        for i in 0..<(totalPages / 64) {
-            let val = bitmap[i]
+    func allocatePage() -> UnsafeMutablePointer<UInt64>? {
+        logger.log("PhysicalMemoryManager: allocating page...")
+        for i in 0..<Int(totalPages / 64) {
+            let val = unsafe bitmap[i]
             if val != UInt64.max { // if not all 64 bits are 1
                 for bit in 0..<64 {
                     let mask:UInt64 = 1 << bit
                     if (val & mask) == 0 {
-                        bitmap[i] |= mask // mark as used
+                        unsafe bitmap[i] |= mask
                         let pageIndex = (i * 64) + bit
-                        return memStart + UInt64(pageIndex * 4096)
+                        let address = UInt64(pageIndex * 4096)
+                        logger.log("PhysicalMemoryManager: allocated page (\(address))")
+                        return unsafe bitmap.advanced(by: Int(address))
                     }
                 }
             }
         }
-        logger.log("PhysicalMemoryManager: out of physical memory!")
-        */
+        logger.log("PANIC: PhysicalMemoryManager: out of physical memory!")
+        return nil
     }
 }

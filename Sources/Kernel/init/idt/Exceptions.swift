@@ -318,10 +318,9 @@ func handleExceptionGeneralProtectionFault() {
 }
 
 @_cdecl("handleExceptionPageFault")
-@_optimize(none)
 func handleExceptionPageFault() {
-    let fa = readFaultAddress()
-    logger.log("PANIC: page fault at address \(fa)")
+    //let fa = readFaultAddress()
+    logger.log("PANIC: page fault at address \\(fa)")
     cpu_halt()
     unsafe LocalAPIC.shared.endOfInterrupt()
 }

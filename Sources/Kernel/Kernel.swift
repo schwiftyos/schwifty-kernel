@@ -5,8 +5,7 @@ public func kmain(
 ) {
     logger.log("kmain: executing...")
 
-    unsafe LocalAPIC.shared.configure()
-    //unsafe IOAPIC.shared.configure()
+    //unsafe LocalAPIC.shared.testTimer()
 
     testSIMD()
     unsafe KernelHeap.shared.verify(amount: 9)

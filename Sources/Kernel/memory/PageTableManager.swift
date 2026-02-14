@@ -1,4 +1,7 @@
 
+@_extern(c, "invlpg")
+private func invlpg(_ address: UInt64)
+
 @safe
 struct PageTableManager {
     var pml4:UnsafeMutablePointer<UInt64>
@@ -23,8 +26,9 @@ extension PageTableManager {
     func map(
         virtual: UInt64,
         physical: UInt64,
-        flags: Flag
+        flags: Flag.RawValue
     ) {
+        logger.log("PageTableManager: mapping addresses...")
         // calculate indexes for each level
         let pml4Index = Int((virtual >> 39) & 0x1FF)
         let pdpIndex  = Int((virtual >> 30) & 0x1FF)
@@ -36,28 +40,40 @@ extension PageTableManager {
         let pt  = unsafe getOrCreateTable(from: pd, index: pdIndex)
 
         // final entry in the Page Table
-        unsafe pt[ptIndex] = physical | flags.rawValue
-        
-        // TODO: invalidate TLB for this address
-        //invlpg(virtual)
+        logger.log("PageTableManager: assigning last page table entry...")
+        unsafe pt[ptIndex] = physical | flags
+        logger.log("PageTableManager: assigned last page table entry")
+
+        invlpg(virtual)
+        logger.log("PageTableManager: mapped addresses")
     }
 
     private func getOrCreateTable(
         from table: UnsafeMutablePointer<UInt64>,
         index: Int
     ) -> UnsafeMutablePointer<UInt64> {
+        logger.log("PageTableManager: getOrCreateTable: executing...")
         let entry = unsafe table[index]
         if (entry & Flag.present.rawValue) != 0 {
+            logger.log("PageTableManager: getOrCreateTable: table exists, extracting and returning address")
             // table exists, extract address (mask out control bits)
             let physicalAddress = entry & 0x000FFFFF_FFFFF000
             return unsafe UnsafeMutablePointer<UInt64>(bitPattern: UInt(physicalAddress))!
         } else {
-            let newTablePhysicalAddress = unsafe PhysicalMemoryManager.shared.allocatePage() 
-            unsafe table[index] = newTablePhysicalAddress | Flag.present.rawValue | Flag.writable.rawValue
-            
-            let newTableVirtualAddress = unsafe UnsafeMutablePointer<UInt64>(bitPattern: UInt(newTablePhysicalAddress))!
-            unsafe newTableVirtualAddress.initialize(repeating: 0, count: 512) // clear the new table
-            return unsafe newTableVirtualAddress
+            logger.log("PageTableManager: getOrCreateTable: table doesn't exists, allocating page...")
+            guard let newTableAddress = unsafe PhysicalMemoryManager.shared.allocatePage() else {
+                logger.log("PANIC: PageTableManager: getOrCreateTable: failed to allocate page")
+                while true {
+                    cpu_halt()
+                }
+            }
+            unsafe table[index] = newTableAddress.pointee | Flag.present.rawValue | Flag.writable.rawValue
+
+            logger.log("PageTableManager: getOrCreateTable: clearing table...")
+            unsafe newTableAddress.initialize(repeating: 0, count: 512)
+
+            logger.log("PageTableManager: getOrCreateTable: returning address")
+            return unsafe newTableAddress
         }
     }
 }
