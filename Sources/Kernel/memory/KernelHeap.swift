@@ -22,7 +22,7 @@ extension KernelHeap {
         unsafe _startAddress = startAddress
         _size = Int(size)
 
-        logger.log("KernelHeap: loaded at \\(UInt(bitPattern: startAddress)) with \\(size) bytes...")
+        logger.log("KernelHeap: loaded at \(UInt(bitPattern: startAddress)) with \(size) bytes...")
     }
 }
 
@@ -63,7 +63,6 @@ extension KernelHeap {
 // MARK: verify
 extension KernelHeap {
     func verify(amount: Int) {
-        return;
         logger.log("KernelHeap: verify: starting...")
     
         // test class allocation

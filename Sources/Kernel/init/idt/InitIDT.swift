@@ -10,7 +10,7 @@ nonisolated(unsafe) var idt = [256 of IDTEntry](repeating: .init(handler: 0))
 func initIDT() {
     logger.log("IDT: initializing...")
 
-    registerIDTExceptions()
+    registerIDTInterrupts()
 
     logger.log("IDT: loading idtr...")
     let limit = UInt16(MemoryLayout<IDTEntry>.size * 256 - 1)

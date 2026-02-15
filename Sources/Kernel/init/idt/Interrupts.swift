@@ -1,103 +1,106 @@
 
 // MARK: Register
 // https://wiki.osdev.org/Exceptions
-func registerIDTExceptions() {
-    logger.log("IDT: registering exceptions...")
+func registerIDTInterrupts() {
+    logger.log("IDT: registering interrupts...")
 
-    registerException(index: 0, handle_exception_division_error)
-    logger.log("IDT: registered exception: division error")
+    registerInterrupt(index: 0, handle_exception_division_error)
+    logger.log("IDT: registered interrupt: division error")
 
-    registerException(index: 1, handle_exception_debug)
-    logger.log("IDT: registered exception: debug")
+    registerInterrupt(index: 1, handle_exception_debug)
+    logger.log("IDT: registered interrupt: debug")
 
-    registerException(index: 2, handle_exception_nonmaskable_interrupt)
-    logger.log("IDT: registered exception: non-maskable interrupt")
+    registerInterrupt(index: 2, handle_exception_nonmaskable_interrupt)
+    logger.log("IDT: registered interrupt: non-maskable interrupt")
 
-    registerException(index: 3, handle_exception_breakpoint)
-    logger.log("IDT: registered exception: breakpoint")
+    registerInterrupt(index: 3, handle_exception_breakpoint)
+    logger.log("IDT: registered interrupt: breakpoint")
 
-    registerException(index: 4, handle_exception_overflow)
-    logger.log("IDT: registered exception: overflow")
+    registerInterrupt(index: 4, handle_exception_overflow)
+    logger.log("IDT: registered interrupt: overflow")
 
-    registerException(index: 5, handle_exception_bound_range_exceeded)
-    logger.log("IDT: registered exception: bound range exceeded")
+    registerInterrupt(index: 5, handle_exception_bound_range_exceeded)
+    logger.log("IDT: registered interrupt: bound range exceeded")
 
-    registerException(index: 6, handle_exception_invalid_opcode)
-    logger.log("IDT: registered exception: invalid opcode")
+    registerInterrupt(index: 6, handle_exception_invalid_opcode)
+    logger.log("IDT: registered interrupt: invalid opcode")
 
-    registerException(index: 7, handle_exception_device_not_available)
-    logger.log("IDT: registered exception: device not available")
+    registerInterrupt(index: 7, handle_exception_device_not_available)
+    logger.log("IDT: registered interrupt: device not available")
 
-    registerException(index: 8, handle_exception_double_fault)
-    logger.log("IDT: registered exception: double fault")
+    registerInterrupt(index: 8, handle_exception_double_fault)
+    logger.log("IDT: registered interrupt: double fault")
 
-    registerException(index: 10, handle_exception_invalid_tss)
-    logger.log("IDT: registered exception: invalid tss")
+    registerInterrupt(index: 10, handle_exception_invalid_tss)
+    logger.log("IDT: registered interrupt: invalid tss")
 
-    registerException(index: 11, handle_exception_segment_not_present)
-    logger.log("IDT: registered exception: segment not present")
+    registerInterrupt(index: 11, handle_exception_segment_not_present)
+    logger.log("IDT: registered interrupt: segment not present")
 
-    registerException(index: 12, handle_exception_stack_segment_fault)
-    logger.log("IDT: registered exception: stack-segment fault")
+    registerInterrupt(index: 12, handle_exception_stack_segment_fault)
+    logger.log("IDT: registered interrupt: stack-segment fault")
 
-    registerException(index: 13, handle_exception_general_protection_fault)
-    logger.log("IDT: registered exception: general protection fault")
+    registerInterrupt(index: 13, handle_exception_general_protection_fault)
+    logger.log("IDT: registered interrupt: general protection fault")
     
-    registerException(index: 14, handle_exception_page_fault)
-    logger.log("IDT: registered exception: page fault")
+    registerInterrupt(index: 14, handle_exception_page_fault)
+    logger.log("IDT: registered interrupt: page fault")
 
-    registerException(index: 15, handle_exception_15)
-    logger.log("IDT: registered exception: 15")
+    registerInterrupt(index: 15, handle_exception_15)
+    logger.log("IDT: registered interrupt: 15")
 
-    registerException(index: 16, handle_exception_x87_floating_point_exception)
-    logger.log("IDT: registered exception: x87 floating-point exception")
+    registerInterrupt(index: 16, handle_exception_x87_floating_point_exception)
+    logger.log("IDT: registered interrupt: x87 floating-point exception")
 
-    registerException(index: 17, handle_exception_alignment_check)
-    logger.log("IDT: registered exception: alignment check")
+    registerInterrupt(index: 17, handle_exception_alignment_check)
+    logger.log("IDT: registered interrupt: alignment check")
 
-    registerException(index: 18, handle_exception_machine_check)
-    logger.log("IDT: registered exception: machine check")
+    registerInterrupt(index: 18, handle_exception_machine_check)
+    logger.log("IDT: registered interrupt: machine check")
 
-    registerException(index: 19, handle_exception_simd_floating_point_exception)
-    logger.log("IDT: registered exception: SIMD floating-point exception")
+    registerInterrupt(index: 19, handle_exception_simd_floating_point_exception)
+    logger.log("IDT: registered interrupt: SIMD floating-point exception")
 
-    registerException(index: 20, handle_exception_virtualization_exception)
-    logger.log("IDT: registered exception: virtualization exception")
+    registerInterrupt(index: 20, handle_exception_virtualization_exception)
+    logger.log("IDT: registered interrupt: virtualization exception")
 
-    registerException(index: 21, handle_exception_control_protection_exception)
-    logger.log("IDT: registered exception: control protection exception")
+    registerInterrupt(index: 21, handle_exception_control_protection_exception)
+    logger.log("IDT: registered interrupt: control protection exception")
 
-    registerException(index: 22, handle_exception_22)
-    logger.log("IDT: registered exception: 22")
+    registerInterrupt(index: 22, handle_exception_22)
+    logger.log("IDT: registered interrupt: 22")
 
-    registerException(index: 23, handle_exception_23)
-    logger.log("IDT: registered exception: 23")
+    registerInterrupt(index: 23, handle_exception_23)
+    logger.log("IDT: registered interrupt: 23")
 
-    registerException(index: 24, handle_exception_24)
-    logger.log("IDT: registered exception: 24")
+    registerInterrupt(index: 24, handle_exception_24)
+    logger.log("IDT: registered interrupt: 24")
 
-    registerException(index: 25, handle_exception_25)
-    logger.log("IDT: registered exception: 25")
+    registerInterrupt(index: 25, handle_exception_25)
+    logger.log("IDT: registered interrupt: 25")
 
-    registerException(index: 26, handle_exception_26)
-    logger.log("IDT: registered exception: 26")
+    registerInterrupt(index: 26, handle_exception_26)
+    logger.log("IDT: registered interrupt: 26")
 
-    registerException(index: 27, handle_exception_27)
-    logger.log("IDT: registered exception: 27")
+    registerInterrupt(index: 27, handle_exception_27)
+    logger.log("IDT: registered interrupt: 27")
 
-    registerException(index: 28, handle_exception_hypervisor_injection_exception)
-    logger.log("IDT: registered exception: hypervisor injection exception")
+    registerInterrupt(index: 28, handle_exception_hypervisor_injection_exception)
+    logger.log("IDT: registered interrupt: hypervisor injection exception")
 
-    registerException(index: 29, handle_exception_vmm_communication_exception)
-    logger.log("IDT: registered exception: VMM communication exception")
+    registerInterrupt(index: 29, handle_exception_vmm_communication_exception)
+    logger.log("IDT: registered interrupt: VMM communication exception")
 
-    registerException(index: 30, handle_exception_security_exception)
-    logger.log("IDT: registered exception: security exception")
+    registerInterrupt(index: 30, handle_exception_security_exception)
+    logger.log("IDT: registered interrupt: security exception")
 
-    registerException(index: 31, handle_exception_31)
-    logger.log("IDT: registered exception: 31")
+    registerInterrupt(index: 31, handle_exception_31)
+    logger.log("IDT: registered interrupt: 31")
 
-    logger.log("IDT: registered exceptions")
+    registerInterrupt(index: 33, keyboard_handler)
+    logger.log("IDT: registered interrupt: 33")
+
+    logger.log("IDT: registered interrupts")
 }
 
 // MARK: Externs
@@ -198,7 +201,10 @@ private func handle_exception_security_exception()
 @_extern(c, "handle_exception_31")
 private func handle_exception_31()
 
-private func registerException(
+@_extern(c, "keyboard_handler")
+private func keyboard_handler()
+
+private func registerInterrupt(
     index: Int,
     _ closure: @convention(c) () -> Void
 ) {

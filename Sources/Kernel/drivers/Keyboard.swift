@@ -1,9 +1,11 @@
 
 @_cdecl("keyboard_interrupt_handler")
-func keyboardInterruptHandler() {
+func keyboard_interrupt_handler(vector: UInt64) {
+    logger.log("Keyboard: keyboardInterruptHandler: executing...")
     let scancode = inb(0x60) // PS/2 keyboard port
     logger.log("Keyboard: keyboardInterruptHandler: scancode=\\(scancode)")
     unsafe LocalAPIC.shared.endOfInterrupt()
+    logger.log("Keyboard: keyboardInterruptHandler: executed")
 }
 
 final class Keyboard {

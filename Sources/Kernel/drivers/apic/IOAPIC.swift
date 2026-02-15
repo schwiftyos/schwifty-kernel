@@ -8,7 +8,7 @@ final class IOAPIC {
 
     private var _address:UInt!
 
-    // use a computed properly to avoid caching a stale pointer
+    // use a computed property to avoid caching a stale pointer
     private var baseAddress: UnsafeMutablePointer<UInt32> {
         unsafe UnsafeMutablePointer<UInt32>(bitPattern: _address)!
     }

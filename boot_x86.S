@@ -32,7 +32,6 @@
     push %rdx
     push %rsi
     push %rdi
-    push %rsp
     push %rbp
     push %r8
     push %r9
@@ -55,7 +54,6 @@
     pop %r9
     pop %r8
     pop %rbp
-    pop %rsp
     pop %rdi
     pop %rsi
     pop %rdx
@@ -64,16 +62,27 @@
     pop %rax
 .endm
 
+# MARK: Align stack before call
+.macro STACK_ALIGN_BEFORE_CALL
+    and $-16, %rsp # align to 16 bytes
+    sub $8, %rsp   # satisfy ABI "16-byte alignment before call"
+.endm
+
 # MARK: Generic Interrupt Handler Wrapper
 .macro INTERRUPT_HANDLER name, swift_func
 .global \name
 \name:
     SAVE_REGISTERS
+
+    mov %rsp, %rbx # save original stack pointer
+    STACK_ALIGN_BEFORE_CALL
+
     call \swift_func
+
+    mov %rbx, %rsp # restore original stack pointer
     RESTORE_REGISTERS
     
-    # remove the 8-byte error code pushed by the CPU, then return from interrupt
-    add $8, %rsp
+    add $8, %rsp   # remove the error code
     iretq
 .endm
 
@@ -364,8 +373,15 @@ invlpg:
 .global keyboard_handler
 keyboard_handler:
     SAVE_REGISTERS
+
+    mov %rsp, %rbx # save original stack pointer
+    STACK_ALIGN_BEFORE_CALL
+
     mov $33, %rdi
     call keyboard_interrupt_handler
+
+    mov %rbx, %rsp # restore original stack pointer
+
     RESTORE_REGISTERS
     iretq
 
