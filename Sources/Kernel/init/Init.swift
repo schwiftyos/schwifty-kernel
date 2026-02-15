@@ -1,12 +1,27 @@
 
-func initKernel(
+@_cdecl("kinit")
+public func kinit(
     infoPointer: UnsafeRawPointer
 ) {
-    logger.log("Kernel: initializing...")
+    UART.initialize()
+
+    logger.log("kinit: executing...")
 
     initSIMD()
     initIDT()
+
+    if hasRDRANDSupport() {
+        logger.log("kinit: RDRAND supported")
+    } else {
+        logger.log("kinit: RDRAND unsupported")
+    }
+
+    unsafe PhysicalMemoryManager.shared.initialize(bitmapAddress: 0x200000)
+    unsafe LocalAPIC.shared.configure()
     unsafe initMultiboot2(infoPointer: infoPointer)
 
-    logger.log("Kernel: initialized")
+    unsafe PageTableManager.shared.initialize(pml4: UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!)
+    unsafe IOAPIC.shared.configure()
+
+    logger.log("kinit: executed")
 }

@@ -40,16 +40,18 @@ We have to manually write the boot sequences in assembly for each architecture w
 ### Drivers
 
 - [x] UART (Serial Port)
+- [x] Local APIC
+- [x] I/O APIC
+- [ ] Keyboard
 - [ ] VGA
 - [ ] I/O
   - [ ] Synchronous I/O
   - [ ] Shared Rings (Ring Buffers)
-  - [ ] `io_uring`
-- [ ] Keyboard
+  - [ ] I/O Rings / `io_uring`
+  - [ ] Virtual I/O
 - [ ] Network
-- [ ] Virtual I/O
-- [ ] Mouse
 - [ ] NVME
+- [ ] Mouse
 - [ ] Audio
 
 ### Misc
@@ -59,10 +61,9 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [x] Global Descriptor Table
 - [x] Interrupt Descriptor Table
 - [x] SIMD support
-- [ ] Single Address Space (SASOS)
+- [ ] Heap (currently SASOS)
   - [x] allocating and using memory
   - [ ] freeing memory
-- [ ] APIC (Advanced Programmable Interrupt Controller)
 - [ ] Schedulers
 - [ ] Cooperative Scheduling
 - [ ] Threads

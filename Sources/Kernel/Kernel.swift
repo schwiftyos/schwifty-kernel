@@ -3,11 +3,14 @@
 public func kmain(
     infoPointer: UnsafeRawPointer
 ) {
-    UART.initialize()
-    unsafe initKernel(infoPointer: infoPointer)
+    logger.log("kmain: executing...")
+
+    //unsafe LocalAPIC.shared.testTimer()
 
     testSIMD()
     unsafe KernelHeap.shared.verify(amount: 9)
+
+    logger.log("kmain: executed")
     unsafe KernelScheduler.shared.start()
 }
 

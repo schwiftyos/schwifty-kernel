@@ -24,6 +24,12 @@ func cpuidLow(leaf: UInt32, subleaf: UInt32, result: inout CPUIDResult) {
     //logger.log("cpuidLow: loaded cpuid_low value")
 }
 
+func hasRDRANDSupport() -> Bool {
+    var result = CPUIDResult()
+    cpuidLow(leaf: 1, subleaf: 0, result: &result)
+    return (result.ecx & (1 << 30)) != 0
+}
+
 struct CPUIDResult {
     var eax:UInt32 = 0
     var ebx:UInt32 = 0
