@@ -22,7 +22,7 @@ extension KernelHeap {
         unsafe _startAddress = startAddress
         _size = Int(size)
 
-        logger.log("KernelHeap: loaded at \(UInt(bitPattern: startAddress)) with \(size) bytes...")
+        logger.log("KernelHeap: loaded at \(UInt(bitPattern: startAddress)) with \(size) bytes")
     }
 }
 
@@ -91,7 +91,7 @@ extension KernelHeap {
     }
 }
 
-private class KernelTest {
+private final class KernelTest {
     var value:Int
 
     init(value: Int) {

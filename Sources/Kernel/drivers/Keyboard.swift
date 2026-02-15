@@ -1,6 +1,6 @@
 
 @_cdecl("keyboard_interrupt_handler")
-func keyboard_interrupt_handler(vector: UInt64) {
+func keyboardInterruptHandler(vector: UInt64) {
     logger.log("Keyboard: keyboardInterruptHandler: executing...")
     let scancode = inb(0x60) // PS/2 keyboard port
     logger.log("Keyboard: keyboardInterruptHandler: scancode=\\(scancode)")
@@ -13,7 +13,7 @@ final class Keyboard {
 }
 
 extension Keyboard {
-    /// Wait for the PS/2 controller to be ready
+    /// Waits for the PS/2 controller to be ready.
     private func waitBufferEmpty() {
         // Bit 1 of port 0x64 is the 'Input buffer status'
         // 0: empty, 1: full. We wait until it is 0.
@@ -21,13 +21,13 @@ extension Keyboard {
         }
     }
 
-    /// Sends a command byte to the keyboard (Port 0x60)
+    /// Sends a command byte to the keyboard (port 0x60).
     private func sendCommand(_ command: UInt8) {
         waitBufferEmpty()
         outb(0x60, command)
     }
 
-    /// Sends a command byte to the PS/2 Controller (Port 0x64)
+    /// Sends a command byte to the PS/2 Controller (port 0x64).
     private func sendControllerCommand(_ command: UInt8) {
         waitBufferEmpty()
         outb(0x64, command)
@@ -44,7 +44,7 @@ extension Keyboard {
         sendControllerCommand(0xAE)
 
         // enable interrupts in the Configuration Byte (tells the controller to actually pull the IRQ line)
-        // Command: Read Command Byte
+        // command: Read Command Byte
         sendControllerCommand(0x20)
 
         // wait for data to be available (bit 0 of 0x64)
