@@ -82,7 +82,7 @@ extension LocalAPIC {
 
         let count = read(.timerCurrentCount)
         if count < 0xFFFFFFFF {
-            logger.log("LocalAPIC: testTimer: ticking; current: \(count)")
+            logger.log("LocalAPIC: testTimer: ticking; current: \\(count)")
         } else {
             logger.log("LocalAPIC: testTimer: timer is stuck!")
         }

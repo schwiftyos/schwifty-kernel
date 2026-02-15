@@ -250,7 +250,6 @@ cpu_halt:
     call kinit
     sti                  # enable interrupts
     call kmain
-    hlt
 
 # MARK: Standard I/O port helpers
 .global outb

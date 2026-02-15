@@ -84,10 +84,21 @@ extension IOAPIC {
     }
 }
 
-// MARK: Register keyboard
+// MARK: Configure keyboard
 extension IOAPIC {
+    /// Configures ports to enable keyboard interrupts.
     private func configureKeyboard() {
         logger.log("IOAPIC: configuring keyboard...")
+
+        unsafe Keyboard.shared.prepare()
+
+        logger.log("IOAPIC: configureKeyboard: flushing buffer...")
+        // flush existing data in the buffer
+        while (inb(0x64) & 0x1) != 0 {
+            _ = inb(0x60)
+        }
+        logger.log("IOAPIC: configureKeyboard: flushed buffer")
+
         // Route IRQ 1 (Keyboard) to IDT Vector 33 (0x21), target CPU 0
         configure(irq: 1, vector: 33, cpuID: 0)
         logger.log("IOAPIC: configured keyboard")
