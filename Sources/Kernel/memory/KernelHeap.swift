@@ -35,14 +35,14 @@ extension KernelHeap {
         return unsafe allocate(size: size, alignment: 16)
     }
 
-    /// Tries to allocate the provided number of byes using the provided alignment.
+    /// Tries to allocate the provided number of bytes using the provided alignment.
     func allocate(
         size: Int,
         alignment: Int
     ) -> UnsafeMutableRawPointer? {
         let alignedSize = (size + alignment) & ~alignment
         guard _offset + alignedSize < _size else {
-            logger.log("KernelHeap: allocate: ran out of memory trying to allocate X bytes with alignment Y")
+            logger.log("PANIC: KernelHeap: allocate: ran out of memory trying to allocate X bytes with alignment Y")
             return nil
         }
         let p = unsafe _startAddress.advanced(by: Int(_offset))

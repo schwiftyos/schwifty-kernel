@@ -20,16 +20,8 @@ public func kinit(
     unsafe LocalAPIC.shared.configure()
     unsafe initMultiboot2(infoPointer: infoPointer)
 
-    let pml4Pointer = unsafe UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!
-    let pageManager = unsafe PageTableManager(pml4: pml4Pointer)
-    pageManager.map(
-        virtual: 0xFEE00000,
-        physical: 0xFEE00000,
-        flags: PageTableManager.Flag.present.rawValue
-                | PageTableManager.Flag.writable.rawValue
-                | PageTableManager.Flag.cacheDisable.rawValue
-                | PageTableManager.Flag.writeThrough.rawValue
-    )
+    unsafe PageTableManager.shared.initialize(pml4: UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!)
+    unsafe IOAPIC.shared.configure()
 
     logger.log("kinit: executed")
 }

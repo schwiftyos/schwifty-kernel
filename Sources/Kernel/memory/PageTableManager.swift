@@ -3,8 +3,16 @@
 private func invlpg(_ address: UInt64)
 
 @safe
-struct PageTableManager {
-    var pml4:UnsafeMutablePointer<UInt64>
+final class PageTableManager {
+    static nonisolated(unsafe) let shared = PageTableManager()
+
+    private var pml4:UnsafeMutablePointer<UInt64>!
+
+    /// Initializes the page table manager and maps the initial addresses.
+    func initialize(pml4: UnsafeMutablePointer<UInt64>) {
+        unsafe self.pml4 = pml4
+        initMap()
+    }
 }
 
 // MARK: Flag
@@ -23,12 +31,30 @@ extension PageTableManager {
 
 // MARK: Map
 extension PageTableManager {
-    func map(
+    /// Maps initial addresses.
+    private func initMap() {
+        logger.log("PageTableManager: mapping initial addresses...")
+        let defaultFlags = PageTableManager.Flag.present.rawValue
+            | PageTableManager.Flag.writable.rawValue
+            | PageTableManager.Flag.cacheDisable.rawValue
+            | PageTableManager.Flag.writeThrough.rawValue
+
+        // kernel
+        map(virtual: 0xFEE00000, physical: 0xFEE00000, flags: defaultFlags)
+
+        // i/o apic
+        map(virtual: 0xFEC00000, physical: 0xFEC00000, flags: defaultFlags)
+        map(virtual: 0xFEE00000, physical: 0xFEE00000, flags: defaultFlags)
+
+        logger.log("PageTableManager: mapped initial addresses")
+    }
+
+    private func map(
         virtual: UInt64,
         physical: UInt64,
         flags: Flag.RawValue
     ) {
-        logger.log("PageTableManager: mapping addresses...")
+        logger.log("PageTableManager: map: executing...")
         // calculate indexes for each level
         let pml4Index = Int((virtual >> 39) & 0x1FF)
         let pdpIndex  = Int((virtual >> 30) & 0x1FF)
@@ -40,12 +66,12 @@ extension PageTableManager {
         let pt  = unsafe getOrCreateTable(from: pd, index: pdIndex)
 
         // final entry in the Page Table
-        logger.log("PageTableManager: assigning last page table entry...")
+        logger.log("PageTableManager: map: assigning last page table entry...")
         unsafe pt[ptIndex] = physical | flags
-        logger.log("PageTableManager: assigned last page table entry")
+        logger.log("PageTableManager: map: assigned last page table entry")
 
         invlpg(virtual)
-        logger.log("PageTableManager: mapped addresses")
+        logger.log("PageTableManager: map: executed")
     }
 
     private func getOrCreateTable(

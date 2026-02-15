@@ -6,7 +6,12 @@
 final class IOAPIC {
     static nonisolated(unsafe) let shared = IOAPIC()
 
-    private var baseAddress:UnsafeMutablePointer<UInt32>! //:UInt64 = 0xFEC00000
+    private var _address:UInt!
+
+    // use a computed properly to avoid caching a stale pointer
+    private var baseAddress: UnsafeMutablePointer<UInt32> {
+        unsafe UnsafeMutablePointer<UInt32>(bitPattern: _address)!
+    }
 
     // Memory-mapped register offsets
     private let ioregsel = 0x00
@@ -15,8 +20,9 @@ final class IOAPIC {
 
 // MARK: initialize
 extension IOAPIC {
-    func initialize(baseAddress: UnsafeMutablePointer<UInt32>) {
-        unsafe self.baseAddress = baseAddress
+    // usually 0xFEC00000
+    func initialize(baseAddress: UInt) {
+        _address = baseAddress
     }
 }
 
@@ -62,15 +68,19 @@ extension IOAPIC {
         vector: UInt8,
         cpuID: UInt8
     ) {
-        let lowIndex = Register.redirectionTableBase.rawValue + (irq * 2)
-        let highIndex = lowIndex + 1
+        let lowRegister = Register.redirectionTableBase.rawValue + (irq * 2)
+        let highRegister = lowRegister + 1
 
         // upper 32 bits = destination (APIC ID of the core)
-        let highValue = UInt32(cpuID) << 24
+        let highValue = UInt32(0xFF) << 24 // UInt32(cpuID) << 24
+        write(highValue, to: highRegister)
 
-        // lower 32 bits = vector, delivery mode (000 = fixed), destination mode (0 = physical), unmask (0 = enabled)
-        write(UInt32(vector), to: lowIndex)
-        write(highValue, to: highIndex)
+        // lower 32 bits = vector
+        // delivery mode (000 = fixed)
+        // destination mode (0 = physical)
+        // unmask (0 = enabled)
+        let lowValue = UInt32(vector)
+        write(lowValue, to: lowRegister)
     }
 }
 
