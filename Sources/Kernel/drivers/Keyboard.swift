@@ -4,8 +4,8 @@ func keyboardInterruptHandler(vector: UInt64) {
     logger.log("Keyboard: keyboardInterruptHandler: executing...")
     let scancode = inb(0x60) // PS/2 keyboard port
     logger.log("Keyboard: keyboardInterruptHandler: scancode=\\(scancode)")
-    unsafe LocalAPIC.shared.endOfInterrupt()
     logger.log("Keyboard: keyboardInterruptHandler: executed")
+    unsafe LocalAPIC.shared.endOfInterrupt()
 }
 
 final class Keyboard {
