@@ -42,7 +42,7 @@ We have to manually write the boot sequences in assembly for each architecture w
 - [x] UART (Serial Port)
 - [x] Local APIC
 - [x] I/O APIC
-- [x] Keyboard
+- [ ] Keyboard
 - [ ] VGA
 - [ ] I/O
   - [ ] Synchronous I/O
