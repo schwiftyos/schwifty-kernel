@@ -4,11 +4,17 @@ func cpu_halt()
 
 // MARK: I/O
 
-@_extern(c, "outb")
-func outb(_ port: UInt16, _ value: UInt8)
+@_extern(c, "outbyte")
+func outbyte(port: UInt16, value: UInt8)
 
-@_extern(c, "inb")
-func inb(_ port: UInt16) -> UInt8
+@_extern(c, "inbyte")
+func inbyte(port: UInt16) -> UInt8
+
+@_extern(c, "outlong")
+func outlong(port: UInt16, value: UInt32)
+
+@_extern(c, "inlong")
+func inlong(port: UInt16) -> UInt32
 
 // MARK: cpuid
 @_extern(c, "cpuid_low")

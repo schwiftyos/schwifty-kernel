@@ -23,5 +23,7 @@ public func kinit(
     unsafe PageTableManager.shared.initialize(pml4: UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!)
     unsafe IOAPIC.shared.configure()
 
+    PCI.shared.scan()
+
     logger.log("kinit: executed")
 }

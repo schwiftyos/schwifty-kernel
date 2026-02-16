@@ -7,22 +7,23 @@ struct UART {
     static let port:UInt16 = 0x3F8 // COM1
 
     static func initialize() {
-        outb(port + 1, 0x00) // disable all interrupts
-        outb(port + 3, 0x80) // enable DLAB (set baud rate divisor)
-        outb(port + 0, 0x03) // set divisor to 3 (38400 baud)
-        outb(port + 1, 0x00) // hi byte
-        outb(port + 3, 0x03) // 8 bits, no parity, one stop bit
-        outb(port + 2, 0xC7) // enable FIFO; clear with 14-byte threshold
-        outb(port + 4, 0x0B) // IRQs enabled; RTS/DSR set
+        outbyte(port: port + 1, value: 0x00) // disable all interrupts
+        outbyte(port: port + 3, value: 0x80) // enable DLAB (set baud rate divisor)
+        outbyte(port: port + 0, value: 0x03) // set divisor to 3 (38400 baud)
+        outbyte(port: port + 1, value: 0x00) // hi byte
+        outbyte(port: port + 3, value: 0x03) // 8 bits, no parity, one stop bit
+        outbyte(port: port + 2, value: 0xC7) // enable FIFO; clear with 14-byte threshold
+        outbyte(port: port + 4, value: 0x0B) // IRQs enabled; RTS/DSR set
         logger.log("UART: initialized")
     }
 
     static func isTransmitEmpty() -> Bool {
-        return (inb(port + 5) & 0x20) != 0
+        return (inbyte(port: port + 5) & 0x20) != 0
     }
 
     static func putchar(_ char: UInt8) {
-        while !isTransmitEmpty() {}
-        outb(port, char)
+        while !isTransmitEmpty() {
+        }
+        outbyte(port: port, value: char)
     }
 }

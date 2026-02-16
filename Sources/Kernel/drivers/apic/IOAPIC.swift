@@ -104,8 +104,8 @@ extension IOAPIC {
 
         logger.log("IOAPIC: configureKeyboard: flushing buffer...")
         // flush existing data in the buffer
-        while (inb(0x64) & 0x1) != 0 {
-            _ = inb(0x60)
+        while (inbyte(port: 0x64) & 0x1) != 0 {
+            _ = inbyte(port: 0x60)
         }
         logger.log("IOAPIC: configureKeyboard: flushed buffer")
 

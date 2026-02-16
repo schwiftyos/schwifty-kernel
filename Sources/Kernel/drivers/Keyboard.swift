@@ -2,7 +2,7 @@
 @_cdecl("keyboard_interrupt_handler")
 func keyboardInterruptHandler(vector: UInt64) {
     logger.log("Keyboard: keyboardInterruptHandler: executing...")
-    let scancode = inb(0x60) // PS/2 keyboard port
+    let scancode = inbyte(port: 0x60) // PS/2 keyboard port
     logger.log("Keyboard: keyboardInterruptHandler: scancode=\\(scancode)")
     logger.log("Keyboard: keyboardInterruptHandler: executed")
     unsafe LocalAPIC.shared.endOfInterrupt()
@@ -17,20 +17,20 @@ extension Keyboard {
     private func waitBufferEmpty() {
         // Bit 1 of port 0x64 is the 'Input buffer status'
         // 0: empty, 1: full. We wait until it is 0.
-        while (inb(0x64) & 0x2) != 0 {
+        while (inbyte(port: 0x64) & 0x2) != 0 {
         }
     }
 
     /// Sends a command byte to the keyboard (port 0x60).
     private func sendCommand(_ command: UInt8) {
         waitBufferEmpty()
-        outb(0x60, command)
+        outbyte(port: 0x60, value: command)
     }
 
     /// Sends a command byte to the PS/2 Controller (port 0x64).
     private func sendControllerCommand(_ command: UInt8) {
         waitBufferEmpty()
-        outb(0x64, command)
+        outbyte(port: 0x64, value: command)
     }
 }
 
@@ -48,9 +48,10 @@ extension Keyboard {
         sendControllerCommand(0x20)
 
         // wait for data to be available (bit 0 of 0x64)
-        while (inb(0x64) & 0x1) == 0 {}
+        while (inbyte(port: 0x64) & 0x1) == 0 {
+        }
 
-        var config = inb(0x60)
+        var config = inbyte(port: 0x60)
         config |= 0x01 // set bit 0 to enable IRQ 1
         config &= ~0x10 // clear bit 4 to disable clock
 

@@ -260,19 +260,31 @@ cpu_halt:
     sti                  # enable interrupts
     call kmain
 
-# MARK: Standard I/O port helpers
-.global outb
-outb:
+# MARK: I/O port helpers
+.global outbyte
+outbyte:
     mov %di, %dx  # port
     mov %sil, %al # value
     out %al, %dx
     ret
 
-.global inb
-inb:
+.global inbyte
+inbyte:
+    mov %di, %dx # port
+    in %dx, %al  # value
+    ret
+
+.global outlong
+outlong:
     mov %di, %dx   # port
-    xor %rax, %rax # clear to ensure clean return
-    in %dx, %al
+    mov %esi, %eax # value
+    out %eax, %dx
+    ret
+
+.global inlong
+inlong:
+    mov %di, %dx # port
+    in %dx, %eax # value
     ret
 
 # MARK: Random
