@@ -130,7 +130,7 @@ private func setupACPI(rsdpAddress: UnsafeRawPointer) {
         return
     }
     if let ioapicAddress = unsafe madtParse(madt: madt) {
-        unsafe IOAPIC.shared.initialize(baseAddress: UInt(ioapicAddress))
+        IOAPIC.initialize(baseAddress: UInt(ioapicAddress))
     }
     logger.log("Multiboot2: setupACPI: executed")
 }

@@ -17,11 +17,11 @@ public func kinit(
     }
 
     unsafe PhysicalMemoryManager.shared.initialize(bitmapAddress: 0x200000)
-    unsafe LocalAPIC.shared.configure()
+    LocalAPIC.configure()
     unsafe initMultiboot2(infoPointer: infoPointer)
 
     unsafe PageTableManager.shared.initialize(pml4: UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!)
-    unsafe IOAPIC.shared.configure()
+    IOAPIC.configure()
 
     logger.log("kinit: executed")
 }

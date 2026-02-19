@@ -2,12 +2,11 @@
 // https://wiki.osdev.org/APIC
 
 /// Local Advanced Programmable Interrupt Controller.
-final class LocalAPIC {
-    static nonisolated(unsafe) let shared = LocalAPIC()
+enum LocalAPIC {
 
-    private let baseAddress:UInt64 = 0xFEE00000 // 4276092928
+    private static let baseAddress:UInt64 = 0xFEE00000 // 4276092928
 
-    func endOfInterrupt() {
+    static func endOfInterrupt() {
         logger.log("LocalAPIC: eoi: executing...")
         write(0, to: .endOfInterrupt)
         logger.log("LocalAPIC: eoi: executed")
@@ -34,7 +33,7 @@ extension LocalAPIC {
 
 // MARK: Read
 extension LocalAPIC {
-    private func read(_ register: Register) -> UInt32 {
+    private static func read(_ register: Register) -> UInt32 {
         let pointer = unsafe UnsafePointer<UInt32>(bitPattern: UInt(baseAddress + register.rawValue))
         return unsafe pointer?.pointee ?? 0
     }
@@ -42,7 +41,7 @@ extension LocalAPIC {
 
 // MARK: Write
 extension LocalAPIC {
-    private func write(_ value: UInt32, to register: Register) {
+    private static func write(_ value: UInt32, to register: Register) {
         let pointer = unsafe UnsafeMutablePointer<UInt32>(bitPattern: UInt(baseAddress + register.rawValue))
         unsafe pointer?.pointee = value
     }
@@ -50,7 +49,7 @@ extension LocalAPIC {
 
 // MARK: Configure
 extension LocalAPIC {
-    func configure() {
+    static func configure() {
         logger.log("LocalAPIC: configuring...")
 
         // set Spurious Interrupt Vector and enable APIC
@@ -66,7 +65,7 @@ extension LocalAPIC {
 
 // MARK: test timer
 extension LocalAPIC {
-    func testTimer() {
+    static func testTimer() {
         logger.log("LocalAPIC: testTimer: executing...")
 
         // set the Divide Configuration Register to divide by 16

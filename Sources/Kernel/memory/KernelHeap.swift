@@ -57,6 +57,36 @@ extension KernelHeap {
         //logger.log("KernelHeap: allocate: allocated X bytes with Y alignment")
         return unsafe UnsafeMutableRawPointer(bitPattern: alignedAddress)
     }
+
+    /*
+    func allocate(
+        size: Int,
+        alignment: Int
+    ) -> UnsafeMutableRawPointer? {
+        let baseAddress = unsafe Int(bitPattern: _startAddress)
+        let currentAddress = baseAddress + _offset
+
+        let alignedAddress = (currentAddress + alignment - 1) & ~(alignment - 1)
+        let padding = alignedAddress - currentAddress
+
+        let (sizeNeeded, overflow) = size.addingReportingOverflow(padding)
+        if overflow || _offset + sizeNeeded > _size {
+            logger.log("PANIC: KernelHeap: allocate: out of memory")
+            return nil
+        }
+        _offset += sizeNeeded
+
+        switch alignment {
+        case 4:  logger.log("KernelHeap: allocate: alignment == 4")
+        case 8:  logger.log("KernelHeap: allocate: alignment == 8")
+        case 16: logger.log("KernelHeap: allocate: alignment == 16")
+        case 32: logger.log("KernelHeap: allocate: alignment == 32")
+        default: logger.log("KernelHeap: allocate: unknown alignment")
+        }
+        //logger.log("KernelHeap: allocate: allocated X bytes with Y alignment")
+        return unsafe UnsafeMutableRawPointer(bitPattern: alignedAddress)
+    }
+    */
 }
 
 // MARK: deallocate
