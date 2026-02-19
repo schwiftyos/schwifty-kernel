@@ -46,27 +46,6 @@ extension KernelHeap {
         let currentAddress = baseAddress + _offset
 
         let alignedAddress = (currentAddress + alignment - 1) & ~(alignment - 1)
-        let newOffset = alignedAddress - baseAddress
-
-        let (finalOffset, overflow) = newOffset.addingReportingOverflow(size)
-        guard !overflow && finalOffset <= _size else {
-            logger.log("PANIC: KernelHeap: allocate: out of memory")
-            return nil
-        }
-        _offset = finalOffset
-        //logger.log("KernelHeap: allocate: allocated X bytes with Y alignment")
-        return unsafe UnsafeMutableRawPointer(bitPattern: alignedAddress)
-    }
-
-    /*
-    func allocate(
-        size: Int,
-        alignment: Int
-    ) -> UnsafeMutableRawPointer? {
-        let baseAddress = unsafe Int(bitPattern: _startAddress)
-        let currentAddress = baseAddress + _offset
-
-        let alignedAddress = (currentAddress + alignment - 1) & ~(alignment - 1)
         let padding = alignedAddress - currentAddress
 
         let (sizeNeeded, overflow) = size.addingReportingOverflow(padding)
@@ -86,7 +65,6 @@ extension KernelHeap {
         //logger.log("KernelHeap: allocate: allocated X bytes with Y alignment")
         return unsafe UnsafeMutableRawPointer(bitPattern: alignedAddress)
     }
-    */
 }
 
 // MARK: deallocate

@@ -15,9 +15,9 @@ func keyboardInterruptHandler(vector: UInt64) {
     let key:KeyboardKey
     if unsafe extended {
         unsafe extended = false
-        key = Keyboard.Scancodes.Qwerty.ps2Set1Extended[Int(scancode)]
+        key = KeyboardScancodes.Qwerty.ps2Set1Extended[Int(scancode)]
     } else {
-        key = Keyboard.Scancodes.Qwerty.ps2Set1[Int(scancode)]
+        key = KeyboardScancodes.Qwerty.ps2Set1[Int(scancode)]
     }
     if key != .unknown {
         let isMake = (rawScancode & 0x80) == 0
@@ -27,10 +27,4 @@ func keyboardInterruptHandler(vector: UInt64) {
 }
 
 enum Keyboard {
-}
-
-// MARK: Scancodes
-extension Keyboard {
-    enum Scancodes {
-    }
 }

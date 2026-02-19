@@ -1,5 +1,5 @@
 
-extension Keyboard.Scancodes.Qwerty {
+extension KeyboardScancodes.Qwerty {
     // TODO: fix | why do we get a general protection fault when using 128 inline array size?
     public static let ps2Set1: [_ of KeyboardKey] = {
         var t = [129 of KeyboardKey](repeating: .unknown)
