@@ -1,9 +1,8 @@
 
 // https://wiki.osdev.org/PS/2_Keyboard#Scan_Code_Set_1
 extension KeyboardScancodes.Qwerty {
-    // TODO: fix | why do we get a general protection fault when using 128 inline array size?
     public static let ps2Set1: [_ of KeyEvent] = {
-        var t = [129 of KeyEvent](repeating: .pressed(.unknown))
+        var t = [256 of KeyEvent](repeating: .pressed(.unknown))
         t[0x01] = .pressed(.escape)
         t[0x02] = .pressed(.one)
         t[0x03] = .pressed(.two)

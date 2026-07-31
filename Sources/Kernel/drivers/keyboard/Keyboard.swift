@@ -11,13 +11,12 @@ func keyboardInterruptHandler(vector: UInt64) {
         LocalAPIC.endOfInterrupt()
         return
     }
-    let scancode = rawScancode & 0x7F
     let event:KeyEvent
     if unsafe extended {
         unsafe extended = false
-        event = KeyboardScancodes.Qwerty.ps2Set1Extended[Int(scancode)]
+        event = KeyboardScancodes.Qwerty.ps2Set1Extended[Int(rawScancode)]
     } else {
-        event = KeyboardScancodes.Qwerty.ps2Set1[Int(scancode)]
+        event = KeyboardScancodes.Qwerty.ps2Set1[Int(rawScancode)]
     }
     if event.key != .unknown {
         unsafe keyboardBuffer.push(event)
