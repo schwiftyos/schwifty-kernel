@@ -6,7 +6,7 @@ private nonisolated(unsafe) var extended = false
 func keyboardInterruptHandler(vector: UInt64) {
     let rawScancode = inb(0x60) // PS/2 keyboard port
     if rawScancode == 0xE0 {
-        logger.log("keyboardInterruptHandler: rawScancode == 0xE0")
+        logger.log(staticString: "keyboardInterruptHandler: rawScancode == 0xE0")
         unsafe extended = true
         LocalAPIC.endOfInterrupt()
         return

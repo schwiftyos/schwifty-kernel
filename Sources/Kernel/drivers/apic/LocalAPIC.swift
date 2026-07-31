@@ -7,9 +7,9 @@ enum LocalAPIC {
     private static let baseAddress:UInt64 = 0xFEE00000 // 4276092928
 
     static func endOfInterrupt() {
-        logger.log("LocalAPIC: eoi: executing...")
+        logger.log(staticString: "LocalAPIC: eoi: executing...")
         write(0, to: .endOfInterrupt)
-        logger.log("LocalAPIC: eoi: executed")
+        logger.log(staticString: "LocalAPIC: eoi: executed")
     }
 }
 
@@ -50,7 +50,7 @@ extension LocalAPIC {
 // MARK: Configure
 extension LocalAPIC {
     static func configure() {
-        logger.log("LocalAPIC: configuring...")
+        logger.log(staticString: "LocalAPIC: configuring...")
 
         // set Spurious Interrupt Vector and enable APIC
         // Vector 0xFF; bit 8 = software enable
@@ -59,14 +59,14 @@ extension LocalAPIC {
         // set Task Priority to 0 to accept all interrupts
         write(0, to: .taskPriority)
 
-        logger.log("LocalAPIC: configured")
+        logger.log(staticString: "LocalAPIC: configured")
     }
 }
 
 // MARK: test timer
 extension LocalAPIC {
     static func testTimer() {
-        logger.log("LocalAPIC: testTimer: executing...")
+        logger.log(staticString: "LocalAPIC: testTimer: executing...")
 
         // set the Divide Configuration Register to divide by 16
         write(0x03, to: .timerDivideConfig)
@@ -81,9 +81,9 @@ extension LocalAPIC {
 
         let count = read(.timerCurrentCount)
         if count < 0xFFFFFFFF {
-            logger.log("LocalAPIC: testTimer: ticking; current: \\(count)")
+            logger.log(staticString: "LocalAPIC: testTimer: ticking; current: \\(count)")
         } else {
-            logger.log("LocalAPIC: testTimer: timer is stuck!")
+            logger.log(staticString: "LocalAPIC: testTimer: timer is stuck!")
         }
     }
 }

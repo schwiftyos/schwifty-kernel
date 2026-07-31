@@ -19,9 +19,9 @@ private func cpuid_low(
 )
 
 func cpuidLow(leaf: UInt32, subleaf: UInt32, result: inout CPUIDResult) {
-    //logger.log("cpuidLow: calling cpuid_low...")
+    //logger.log(staticString: "cpuidLow: calling cpuid_low...")
     unsafe cpuid_low(leaf: leaf, subleaf: subleaf, result: &result)
-    //logger.log("cpuidLow: loaded cpuid_low value")
+    //logger.log(staticString: "cpuidLow: loaded cpuid_low value")
 }
 
 func hasRDRANDSupport() -> Bool {

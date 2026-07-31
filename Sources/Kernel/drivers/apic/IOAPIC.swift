@@ -85,9 +85,9 @@ extension IOAPIC {
 extension IOAPIC {
     /// Configures basic interrupts.
     static func configure() {
-        logger.log("IOAPIC: configuring...")
+        logger.log(staticString: "IOAPIC: configuring...")
         configureKeyboard()
-        logger.log("IOAPIC: configured")
+        logger.log(staticString: "IOAPIC: configured")
     }
 }
 
@@ -95,20 +95,20 @@ extension IOAPIC {
 extension IOAPIC {
     /// Configures ports to enable keyboard interrupts.
     private static func configureKeyboard() {
-        logger.log("IOAPIC: configuring keyboard...")
+        logger.log(staticString: "IOAPIC: configuring keyboard...")
 
         Keyboard.prepare()
 
-        logger.log("IOAPIC: configureKeyboard: flushing buffer...")
+        logger.log(staticString: "IOAPIC: configureKeyboard: flushing buffer...")
         // flush existing data in the buffer
         while (inb(0x64) & 0x1) != 0 {
             _ = inb(0x60)
         }
-        logger.log("IOAPIC: configureKeyboard: flushed buffer")
+        logger.log(staticString: "IOAPIC: configureKeyboard: flushed buffer")
 
         // Route IRQ 1 (Keyboard) to IDT Vector 33 (0x21), target CPU 0
         configure(irq: 1, vector: 33, cpuID: 0)
-        logger.log("IOAPIC: configured keyboard")
+        logger.log(staticString: "IOAPIC: configured keyboard")
     }
 }
 
@@ -136,7 +136,7 @@ extension IOAPIC {
 
         /// Initiates a hardware handshake for the keyboard.
         static func prepare() {
-            logger.log("IOAPIC: Keyboard: preparing...")
+            logger.log(staticString: "IOAPIC: Keyboard: preparing...")
 
             // enable the first PS/2 port (command 0xAE sent to the controller [0x64])
             sendControllerCommand(0xAE)
@@ -158,7 +158,7 @@ extension IOAPIC {
             // enable scanning (command 0xF4 sent to the data port [0x60])
             sendCommand(0xF4)
 
-            logger.log("IOAPIC: Keyboard: prepared")
+            logger.log(staticString: "IOAPIC: Keyboard: prepared")
         }
     }
 }

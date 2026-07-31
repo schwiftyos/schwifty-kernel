@@ -5,15 +5,15 @@ public func kinit(
 ) {
     UART.initialize()
 
-    logger.log("kinit: executing...")
+    logger.log(staticString: "kinit: executing...")
 
     initSIMD()
     initIDT()
 
     if hasRDRANDSupport() {
-        logger.log("kinit: RDRAND supported")
+        logger.log(staticString: "kinit: RDRAND supported")
     } else {
-        logger.log("kinit: RDRAND unsupported")
+        logger.log(staticString: "kinit: RDRAND unsupported")
     }
 
     unsafe PhysicalMemoryManager.shared.initialize(bitmapAddress: 0x200000)
@@ -23,5 +23,5 @@ public func kinit(
     unsafe PageTableManager.shared.initialize(pml4: UnsafeMutablePointer<UInt64>(bitPattern: 0x1000)!)
     IOAPIC.configure()
 
-    logger.log("kinit: executed")
+    logger.log(staticString: "kinit: executed")
 }

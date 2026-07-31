@@ -12,6 +12,8 @@ let package = Package(
         )
     ],
     traits: [
+        .default(enabledTraits: ["Log"]),
+        .trait(name: "Log", description: "Logs system events using UART.")
     ],
     targets: [
         .target(

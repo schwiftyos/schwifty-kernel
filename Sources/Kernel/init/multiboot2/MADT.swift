@@ -17,7 +17,7 @@ func madtFind(rsdtAddress: UInt64) -> UnsafePointer<MADTTable>? {
 
 // MARK: Parse
 func madtParse(madt: UnsafePointer<MADTTable>) -> UInt32? {
-    logger.log("Multiboot2: madtParse: executing...")
+    logger.log(staticString: "Multiboot2: madtParse: executing...")
     var ioapicAddress:UInt32? = nil
     var currentOffset = MemoryLayout<MADTTable>.size
     let totalLength = unsafe Int(madt.pointee.header.length)
@@ -29,20 +29,20 @@ func madtParse(madt: UnsafePointer<MADTTable>) -> UInt32? {
         case MADTEntryType.ioAPIC.rawValue:
             // offset 4: 32-bit Physical Address of I/O APIC
             ioapicAddress = unsafe rawPointer.advanced(by: currentOffset + 4).load(as: UInt32.self)
-            logger.log("Multiboot2: madtParse: found I/O APIC at \\(ioapicAddress!)")
+            logger.log(staticString: "Multiboot2: madtParse: found I/O APIC at \\(ioapicAddress!)")
             
         case MADTEntryType.interruptOverride.rawValue:
             // checks if IRQ1 is actually mapped to Global System Interrupt 1 or something else
             let irq = unsafe rawPointer.advanced(by: currentOffset + 3).load(as: UInt8.self)
             let gsi = unsafe rawPointer.advanced(by: currentOffset + 4).load(as: UInt32.self)
-            logger.log("Multiboot2: madtParse: IRQ \\(irq) is actually GSI \\(gsi)")
+            logger.log(staticString: "Multiboot2: madtParse: IRQ \\(irq) is actually GSI \\(gsi)")
             
         default:
-            //logger.log("Multiboot2: madtParse: unhandled entryType (\(entryType))")
+            //logger.log(staticString: "Multiboot2: madtParse: unhandled entryType (\(entryType))")
             break
         }
         currentOffset += Int(entryLength)
     }
-    logger.log("Multiboot2: madtParse: executed")
+    logger.log(staticString: "Multiboot2: madtParse: executed")
     return ioapicAddress
 }

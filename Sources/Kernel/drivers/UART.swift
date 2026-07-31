@@ -14,15 +14,21 @@ struct UART {
         outb(port + 3, 0x03) // 8 bits, no parity, one stop bit
         outb(port + 2, 0xC7) // enable FIFO; clear with 14-byte threshold
         outb(port + 4, 0x0B) // IRQs enabled; RTS/DSR set
-        logger.log("UART: initialized")
+        logger.log(staticString: "UART: initialized")
     }
 
     static func isTransmitEmpty() -> Bool {
         return (inb(port + 5) & 0x20) != 0
     }
 
-    static func putchar(_ char: UInt8) {
+    @available(*, deprecated, message: "Use `putASCII(_:)` instead")
+    static func putChar(_ char: UInt8) {
         while !isTransmitEmpty() {}
         outb(port, char)
+    }
+
+    static func putASCII(_ ascii: ASCII) {
+        while !isTransmitEmpty() {}
+        outb(port, ascii.rawValue)
     }
 }

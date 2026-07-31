@@ -2,20 +2,46 @@
 let logger = KernelLogger()
 
 struct KernelLogger {
-    func log(_ string: String) {
-        for char in string.utf8 {
-            UART.putchar(char)
-        }
-        UART.putchar(10)
+    func logRaw(_ char: ASCII) {
+        #if Log
+        UART.putASCII(char)
+        #endif
+    }
+}
+
+// MARK: StaticString
+extension KernelLogger {
+    func log(staticString: StaticString) {
+        #if Log
+        logRaw(staticString: staticString)
+        UART.putASCII(.lineFeed)
+        #endif
     }
 
-    func logRaw(_ string: String) {
-        for char in string.utf8 {
-            UART.putchar(char)
+    func logRaw(staticString: StaticString) {
+        #if Log
+        for i in 0..<staticString.utf8CodeUnitCount {
+            unsafe UART.putChar((staticString.utf8Start + i).pointee)
         }
+        #endif
+    }
+}
+
+// MARK: String
+extension KernelLogger {
+    /// - Warning: Can allocate heap memory!
+    func log(string: String) {
+        #if Log
+        logRaw(string: string)
+        UART.putASCII(.lineFeed)
+        #endif
     }
 
-    func logRaw(_ char: UInt8) {
-        UART.putchar(char)
+    func logRaw(string: String) {
+        #if Log
+        for char in string.utf8 {
+            UART.putChar(char)
+        }
+        #endif
     }
 }
