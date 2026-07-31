@@ -14,10 +14,10 @@ let package = Package(
     traits: [
         .default(enabledTraits: [
             "Log",
-            "LogKeyboard"
+            "LogKeyEvents"
         ]),
         .trait(name: "Log", description: "Logs system events using UART."),
-        .trait(name: "LogKeyboard", description: "Logs keyboard events using UART."),
+        .trait(name: "LogKeyEvents", description: "Logs key events using UART.", enabledTraits: ["Log"]),
     ],
     targets: [
         .target(

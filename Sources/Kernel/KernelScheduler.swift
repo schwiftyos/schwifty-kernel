@@ -24,13 +24,13 @@ extension KernelScheduler {
             }
 
             if !keyEventQueue.isEmpty {
-                #if LogKeyboard
+                #if LogKeyEvents
                 logger.logRaw(staticString: "KernelScheduler: popping all key events...")
                 #endif
 
                 keyEventQueue.popAllUnchecked({ events in
                     for i in events.indices {
-                        #if LogKeyboard
+                        #if LogKeyEvents
                         logger.logRaw(staticString: "KernelScheduler: keyboard key=")
                         logger.logRaw(staticString: events[i].key.name)
                         logger.logRaw(staticString: ";pressed=")
