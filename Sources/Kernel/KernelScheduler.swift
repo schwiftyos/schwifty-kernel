@@ -22,16 +22,29 @@ extension KernelScheduler {
                 logger.log(staticString: "KernelScheduler: halting cpu; waiting for interrupt...")
                 cpu_halt()
             }
-            while let keyEvent = unsafe keyboardBuffer.pop() {
-                logger.logRaw(staticString: "KernelScheduler: keyboard key=")
-                logger.logRaw(staticString: keyEvent.key.name)
-                logger.logRaw(staticString: ";pressed=")
-                if keyEvent.pressed {
-                    logger.logRaw(staticString: "true")
-                } else {
-                    logger.logRaw(staticString: "false")
-                }
-                logger.logRaw(.lineFeed)
+
+            if !keyEventQueue.isEmpty {
+                #if LogKeyboard
+                logger.logRaw(staticString: "KernelScheduler: popping all key events...")
+                #endif
+
+                keyEventQueue.popAllUnchecked({ events in
+                    for i in events.indices {
+                        #if LogKeyboard
+                        logger.logRaw(staticString: "KernelScheduler: keyboard key=")
+                        logger.logRaw(staticString: events[i].key.name)
+                        logger.logRaw(staticString: ";pressed=")
+                        if events[i].pressed {
+                            logger.logRaw(staticString: "true")
+                        } else {
+                            logger.logRaw(staticString: "false")
+                        }
+                        logger.logRaw(.lineFeed)
+                        #endif
+
+                        // TODO: propagate key events to consumers
+                    }
+                })
             }
         }
     }

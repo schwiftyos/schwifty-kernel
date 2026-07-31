@@ -1,7 +1,15 @@
 
-public struct KeyEvent: Sendable {
+public struct KeyEvent: Sendable, ~Copyable {
     public let key:KeyboardKey
     public let pressed:Bool
+
+    public var released: Bool {
+        !pressed
+    }
+
+    func clone() -> Self {
+        .init(key: key, pressed: pressed)
+    }
 }
 
 extension KeyEvent {

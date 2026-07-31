@@ -1,5 +1,5 @@
 
-struct Panic: Sendable {
+struct Panic: Sendable, ~Copyable {
     let message:StaticString
 
     func execute() {
@@ -16,6 +16,8 @@ extension Panic {
 
     static let kernelLoadHeapButAlreadyLoaded = get("PANIC: KernelHeap: load: tried loading heap, but its already loaded!")
     static let kernelAllocationOutOfMemory = get("PANIC: KernelHeap: allocate: out of memory!")
+
+    static let keyboardRingBufferIsFull = get("PANIC: KeyboardRingBuffer: buffer is full!")
 
     static let pageTableManagerFailedToAllocatePage = get("PANIC: PageTableManager: getOrCreateTable: failed to allocate page!")
 

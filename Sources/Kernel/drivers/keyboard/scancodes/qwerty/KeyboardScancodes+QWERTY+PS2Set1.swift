@@ -2,7 +2,11 @@
 // https://wiki.osdev.org/PS/2_Keyboard#Scan_Code_Set_1
 extension KeyboardScancodes.Qwerty {
     public static let ps2Set1: [_ of KeyEvent] = {
-        var t = [256 of KeyEvent](repeating: .pressed(.unknown))
+        var t = [256 of KeyEvent].init(initializingWith: {
+            for i in 0..<256 {
+                $0.append(.pressed(.unknown))
+            }
+        })
         t[0x01] = .pressed(.escape)
         t[0x02] = .pressed(.one)
         t[0x03] = .pressed(.two)
@@ -177,7 +181,11 @@ extension KeyboardScancodes.Qwerty {
     }()
 
     public static let ps2Set1Extended: [_ of KeyEvent] = {
-        var t = [129 of KeyEvent](repeating: .pressed(.unknown))
+        var t = [129 of KeyEvent].init(initializingWith: {
+            for i in 0..<129 {
+                $0.append(.pressed(.unknown))
+            }
+        })
         t[0x1D] = .pressed(.rightCtrl)
         t[0x38] = .pressed(.rightAlt)
 
