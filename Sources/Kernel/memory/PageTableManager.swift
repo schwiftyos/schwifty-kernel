@@ -88,7 +88,7 @@ extension PageTableManager {
         } else {
             logger.log(staticString: "PageTableManager: getOrCreateTable: table doesn't exists, allocating page...")
             guard let newTableAddress = unsafe PhysicalMemoryManager.shared.allocatePage() else {
-                logger.log(staticString: "PANIC: PageTableManager: getOrCreateTable: failed to allocate page")
+                Panic.pageTableManagerFailedToAllocatePage.execute()
                 while true {
                     cpu_halt()
                 }

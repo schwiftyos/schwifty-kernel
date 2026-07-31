@@ -81,7 +81,7 @@ extension PhysicalMemoryManager {
                 }
             }
         }
-        logger.log(staticString: "PANIC: PhysicalMemoryManager: out of physical memory!")
+        Panic.physicalMemoryManagerOutOfMemory.execute()
         return nil
     }
 }

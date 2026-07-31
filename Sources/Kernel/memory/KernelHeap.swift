@@ -15,7 +15,7 @@ extension KernelHeap {
         size: UInt64
     ) {
         guard unsafe _startAddress == nil else {
-            logger.log(staticString: "KernelHeap: load: PANIC: tried loading heap, but its already loaded!")
+            Panic.kernelLoadHeapButAlreadyLoaded.execute()
             cpu_halt()
             return
         }
@@ -50,7 +50,7 @@ extension KernelHeap {
 
         let (sizeNeeded, overflow) = size.addingReportingOverflow(padding)
         if overflow || _offset + sizeNeeded > _size {
-            logger.log(staticString: "PANIC: KernelHeap: allocate: out of memory")
+            Panic.kernelAllocationOutOfMemory.execute()
             return nil
         }
         _offset += sizeNeeded
