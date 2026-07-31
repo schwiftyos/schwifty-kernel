@@ -1,5 +1,5 @@
 
 extension KeyboardScancodes {
-    enum Qwerty {
+    public enum Qwerty {
     }
 }

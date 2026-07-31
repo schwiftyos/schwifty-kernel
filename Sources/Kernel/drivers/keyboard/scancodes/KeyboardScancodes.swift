@@ -1,3 +1,3 @@
 
-enum KeyboardScancodes {
+public enum KeyboardScancodes {
 }
