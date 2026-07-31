@@ -25,22 +25,12 @@ extension KernelScheduler {
 
             if !keyEventQueue.isEmpty {
                 #if LogKeyEvents
-                logger.logRaw(staticString: "KernelScheduler: popping all key events...")
+                logger.log(staticString: "KernelScheduler: popping all key events...")
                 #endif
 
                 keyEventQueue.popAllUnchecked({ events in
                     for i in events.indices {
-                        #if LogKeyEvents
-                        logger.logRaw(staticString: "KernelScheduler: keyboard key=")
-                        logger.logRaw(staticString: events[i].key.name)
-                        logger.logRaw(staticString: ";pressed=")
-                        if events[i].pressed {
-                            logger.logRaw(staticString: "true")
-                        } else {
-                            logger.logRaw(staticString: "false")
-                        }
-                        logger.logRaw(.lineFeed)
-                        #endif
+                        events[i].log()
                     }
 
                     // TODO: propagate key events to consumers

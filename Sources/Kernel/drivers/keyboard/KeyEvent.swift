@@ -10,6 +10,20 @@ public struct KeyEvent: Sendable, ~Copyable {
     func clone() -> Self {
         .init(key: key, pressed: pressed)
     }
+
+    func log() {
+        #if LogKeyEvents
+        logger.logRaw(staticString: "KeyEvent: key=")
+        logger.logRaw(staticString: key.name)
+        logger.logRaw(staticString: ";pressed=")
+        if pressed {
+            logger.logRaw(staticString: "true")
+        } else {
+            logger.logRaw(staticString: "false")
+        }
+        logger.logRaw(.lineFeed)
+        #endif
+    }
 }
 
 extension KeyEvent {
