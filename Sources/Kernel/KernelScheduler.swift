@@ -41,9 +41,9 @@ extension KernelScheduler {
                         }
                         logger.logRaw(.lineFeed)
                         #endif
-
-                        // TODO: propagate key events to consumers
                     }
+
+                    // TODO: propagate key events to consumers
                 })
             }
         }
