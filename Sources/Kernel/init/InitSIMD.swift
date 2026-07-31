@@ -12,7 +12,7 @@ private func enableAVX512()
 // MARK: Init
 @_optimize(none)
 func initSIMD() {
-    logger.log("SIMD: initializing...")
+    logger.log(staticString: "SIMD: initializing...")
 
     var result = CPUIDResult()
 
@@ -23,13 +23,13 @@ func initSIMD() {
     if hasSSE {
         loadSSE(&result)
     }
-    logger.log("SIMD: initialized")
+    logger.log(staticString: "SIMD: initialized")
 }
 
 private func loadSSE(_ result: inout CPUIDResult) {
-    logger.log("loadSSE: enabling...")
+    logger.log(staticString: "loadSSE: enabling...")
     enableSSE()
-    logger.log("loadSSE: enabled")
+    logger.log(staticString: "loadSSE: enabled")
 
     // check osxsave & avx
     cpuidLow(leaf: 1, subleaf: 0, result: &result)
@@ -41,16 +41,16 @@ private func loadSSE(_ result: inout CPUIDResult) {
 }
 
 private func loadAVX(_ result: inout CPUIDResult) {
-    logger.log("loadAVX: enabling...")
+    logger.log(staticString: "loadAVX: enabling...")
     enableAVX()
-    logger.log("loadAVX: enabled")
+    logger.log(staticString: "loadAVX: enabled")
 
     // check for AVX-512
     cpuidLow(leaf: 7, subleaf: 0, result: &result)
     let hasAVX512F = (result.ebx & (1 << 16)) != 0
     if hasAVX512F {
-        logger.log("loadAVX: enabling AVX-512...")
+        logger.log(staticString: "loadAVX: enabling AVX-512...")
         enableAVX512()
-        logger.log("loadAVX: enabled AVX-512")
+        logger.log(staticString: "loadAVX: enabled AVX-512")
     }
 }

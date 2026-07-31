@@ -11,16 +11,30 @@ public final class KernelScheduler {
 // MARK: start
 extension KernelScheduler {
     public func start() -> Never {
-        logger.log("KernelScheduler: starting...")
+        logger.log(staticString: "KernelScheduler: starting...")
         while true {
             if let job = unsafe queue.first {
-                logger.log("KernelScheduler: running a job...")
+                logger.log(staticString: "KernelScheduler: running a job...")
                 unsafe queue.removeFirst()
                 unsafe runJob(job)
-                logger.log("KernelScheduler: job finished")
+                logger.log(staticString: "KernelScheduler: job finished")
             } else {
-                logger.log("KernelScheduler: halting cpu; waiting for interrupt...")
+                logger.log(staticString: "KernelScheduler: halting cpu; waiting for interrupt...")
                 cpu_halt()
+            }
+
+            if !keyEventQueue.isEmpty {
+                #if LogKeyEvents
+                logger.log(staticString: "KernelScheduler: popping all key events...")
+                #endif
+
+                keyEventQueue.popAllUnchecked({ events in
+                    for i in events.indices {
+                        events[i].log()
+                    }
+
+                    // TODO: propagate key events to consumers
+                })
             }
         }
     }

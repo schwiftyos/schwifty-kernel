@@ -2,15 +2,14 @@
 // https://wiki.osdev.org/APIC
 
 /// Local Advanced Programmable Interrupt Controller.
-final class LocalAPIC {
-    static nonisolated(unsafe) let shared = LocalAPIC()
+enum LocalAPIC {
 
-    private let baseAddress:UInt64 = 0xFEE00000 // 4276092928
+    private static let baseAddress:UInt64 = 0xFEE00000 // 4276092928
 
-    func endOfInterrupt() {
-        logger.log("LocalAPIC: eoi: executing...")
+    static func endOfInterrupt() {
+        logger.log(staticString: "LocalAPIC: eoi: executing...")
         write(0, to: .endOfInterrupt)
-        logger.log("LocalAPIC: eoi: executed")
+        logger.log(staticString: "LocalAPIC: eoi: executed")
     }
 }
 
@@ -34,7 +33,7 @@ extension LocalAPIC {
 
 // MARK: Read
 extension LocalAPIC {
-    private func read(_ register: Register) -> UInt32 {
+    private static func read(_ register: Register) -> UInt32 {
         let pointer = unsafe UnsafePointer<UInt32>(bitPattern: UInt(baseAddress + register.rawValue))
         return unsafe pointer?.pointee ?? 0
     }
@@ -42,7 +41,7 @@ extension LocalAPIC {
 
 // MARK: Write
 extension LocalAPIC {
-    private func write(_ value: UInt32, to register: Register) {
+    private static func write(_ value: UInt32, to register: Register) {
         let pointer = unsafe UnsafeMutablePointer<UInt32>(bitPattern: UInt(baseAddress + register.rawValue))
         unsafe pointer?.pointee = value
     }
@@ -50,8 +49,8 @@ extension LocalAPIC {
 
 // MARK: Configure
 extension LocalAPIC {
-    func configure() {
-        logger.log("LocalAPIC: configuring...")
+    static func configure() {
+        logger.log(staticString: "LocalAPIC: configuring...")
 
         // set Spurious Interrupt Vector and enable APIC
         // Vector 0xFF; bit 8 = software enable
@@ -60,14 +59,14 @@ extension LocalAPIC {
         // set Task Priority to 0 to accept all interrupts
         write(0, to: .taskPriority)
 
-        logger.log("LocalAPIC: configured")
+        logger.log(staticString: "LocalAPIC: configured")
     }
 }
 
 // MARK: test timer
 extension LocalAPIC {
-    func testTimer() {
-        logger.log("LocalAPIC: testTimer: executing...")
+    static func testTimer() {
+        logger.log(staticString: "LocalAPIC: testTimer: executing...")
 
         // set the Divide Configuration Register to divide by 16
         write(0x03, to: .timerDivideConfig)
@@ -82,9 +81,9 @@ extension LocalAPIC {
 
         let count = read(.timerCurrentCount)
         if count < 0xFFFFFFFF {
-            logger.log("LocalAPIC: testTimer: ticking; current: \\(count)")
+            logger.log(staticString: "LocalAPIC: testTimer: ticking; current: \\(count)")
         } else {
-            logger.log("LocalAPIC: testTimer: timer is stuck!")
+            logger.log(staticString: "LocalAPIC: testTimer: timer is stuck!")
         }
     }
 }

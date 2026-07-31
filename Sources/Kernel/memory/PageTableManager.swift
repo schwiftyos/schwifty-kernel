@@ -33,7 +33,7 @@ extension PageTableManager {
 extension PageTableManager {
     /// Maps initial addresses.
     private func initMap() {
-        logger.log("PageTableManager: mapping initial addresses...")
+        logger.log(staticString: "PageTableManager: mapping initial addresses...")
         let defaultFlags = PageTableManager.Flag.present.rawValue
             | PageTableManager.Flag.writable.rawValue
             | PageTableManager.Flag.cacheDisable.rawValue
@@ -46,7 +46,7 @@ extension PageTableManager {
         map(virtual: 0xFEC00000, physical: 0xFEC00000, flags: defaultFlags)
         map(virtual: 0xFEE00000, physical: 0xFEE00000, flags: defaultFlags)
 
-        logger.log("PageTableManager: mapped initial addresses")
+        logger.log(staticString: "PageTableManager: mapped initial addresses")
     }
 
     private func map(
@@ -54,7 +54,7 @@ extension PageTableManager {
         physical: UInt64,
         flags: Flag.RawValue
     ) {
-        logger.log("PageTableManager: map: executing...")
+        logger.log(staticString: "PageTableManager: map: executing...")
         // calculate indexes for each level
         let pml4Index = Int((virtual >> 39) & 0x1FF)
         let pdpIndex  = Int((virtual >> 30) & 0x1FF)
@@ -66,39 +66,38 @@ extension PageTableManager {
         let pt  = unsafe getOrCreateTable(from: pd, index: pdIndex)
 
         // final entry in the Page Table
-        logger.log("PageTableManager: map: assigning last page table entry...")
+        logger.log(staticString: "PageTableManager: map: assigning last page table entry...")
         unsafe pt[ptIndex] = physical | flags
-        logger.log("PageTableManager: map: assigned last page table entry")
+        logger.log(staticString: "PageTableManager: map: assigned last page table entry")
 
         invlpg(virtual)
-        logger.log("PageTableManager: map: executed")
+        logger.log(staticString: "PageTableManager: map: executed")
     }
 
     private func getOrCreateTable(
         from table: UnsafeMutablePointer<UInt64>,
         index: Int
     ) -> UnsafeMutablePointer<UInt64> {
-        logger.log("PageTableManager: getOrCreateTable: executing...")
+        logger.log(staticString: "PageTableManager: getOrCreateTable: executing...")
         let entry = unsafe table[index]
         if (entry & Flag.present.rawValue) != 0 {
-            logger.log("PageTableManager: getOrCreateTable: table exists, extracting and returning address")
+            logger.log(staticString: "PageTableManager: getOrCreateTable: table exists, extracting and returning address")
             // table exists, extract address (mask out control bits)
             let physicalAddress = entry & 0x000FFFFF_FFFFF000
             return unsafe UnsafeMutablePointer<UInt64>(bitPattern: UInt(physicalAddress))!
         } else {
-            logger.log("PageTableManager: getOrCreateTable: table doesn't exists, allocating page...")
+            logger.log(staticString: "PageTableManager: getOrCreateTable: table doesn't exists, allocating page...")
             guard let newTableAddress = unsafe PhysicalMemoryManager.shared.allocatePage() else {
-                logger.log("PANIC: PageTableManager: getOrCreateTable: failed to allocate page")
+                Panic.pageTableManagerFailedToAllocatePage.execute()
                 while true {
                     cpu_halt()
                 }
             }
             unsafe table[index] = newTableAddress.pointee | Flag.present.rawValue | Flag.writable.rawValue
 
-            logger.log("PageTableManager: getOrCreateTable: clearing table...")
+            logger.log(staticString: "PageTableManager: getOrCreateTable: clearing table...")
             unsafe newTableAddress.initialize(repeating: 0, count: 512)
-
-            logger.log("PageTableManager: getOrCreateTable: returning address")
+            logger.log(staticString: "PageTableManager: getOrCreateTable: returning address")
             return unsafe newTableAddress
         }
     }

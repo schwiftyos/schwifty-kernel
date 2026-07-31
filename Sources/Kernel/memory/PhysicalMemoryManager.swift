@@ -25,13 +25,13 @@ final class PhysicalMemoryManager {
 // MARK: initialize
 extension PhysicalMemoryManager {
     func initialize(bitmapAddress: UInt64) {
-        logger.log("PhysicalMemoryManager: initializing...")
+        logger.log(staticString: "PhysicalMemoryManager: initializing...")
 
         unsafe bitmap = UnsafeMutablePointer<UInt64>(bitPattern: UInt(bitmapAddress))
         // initialize all as used (1); markAvailable will free them
         unsafe bitmap.initialize(repeating: UInt64.max, count: Int(totalPages / 64))
 
-        logger.log("PhysicalMemoryManager: initialized")
+        logger.log(staticString: "PhysicalMemoryManager: initialized")
     }
 }
 
@@ -41,8 +41,7 @@ extension PhysicalMemoryManager {
         base: UInt64,
         length: UInt64
     ) {
-        logger.log("PhysicalMemoryManager: attempting to mark X bytes available beginning at Y...")
-
+        logger.log(staticString: "PhysicalMemoryManager: attempting to mark X bytes available beginning at Y...")
         let startPage = base / 4096
         let pageCount = length / 4096
         for i in 0..<pageCount {
@@ -53,8 +52,7 @@ extension PhysicalMemoryManager {
             // TODO: protect the bitmap if its in the available range (assumes bitmap is 128 KiB)?
             setBitAsFree(pageIndex: startPage + i)
         }
-
-        logger.log("PhysicalMemoryManager: marked X bytes available beginning at Y")
+        logger.log(staticString: "PhysicalMemoryManager: marked X bytes available beginning at Y")
     }
 
     private func setBitAsFree(pageIndex: UInt64) {
@@ -67,7 +65,7 @@ extension PhysicalMemoryManager {
 // MARK: allocate page
 extension PhysicalMemoryManager {
     func allocatePage() -> UnsafeMutablePointer<UInt64>? {
-        logger.log("PhysicalMemoryManager: allocating page...")
+        logger.log(staticString: "PhysicalMemoryManager: allocating page...")
         for i in 0..<Int(totalPages / 64) {
             let val = unsafe bitmap[i]
             if val != UInt64.max { // if not all 64 bits are 1
@@ -77,13 +75,13 @@ extension PhysicalMemoryManager {
                         unsafe bitmap[i] |= mask
                         let pageIndex = (i * 64) + bit
                         let address = UInt64(pageIndex * 4096)
-                        logger.log("PhysicalMemoryManager: allocated page (\\(address))")
+                        logger.log(staticString: "PhysicalMemoryManager: allocated page (\\(address))")
                         return unsafe bitmap.advanced(by: Int(address))
                     }
                 }
             }
         }
-        logger.log("PANIC: PhysicalMemoryManager: out of physical memory!")
+        Panic.physicalMemoryManagerOutOfMemory.execute()
         return nil
     }
 }

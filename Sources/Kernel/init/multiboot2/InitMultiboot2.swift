@@ -1,7 +1,7 @@
 
 // https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html
 func initMultiboot2(infoPointer: UnsafeRawPointer) {
-    logger.log("Multiboot2: initializing...")
+    logger.log(staticString: "Multiboot2: initializing...")
     let info = unsafe infoPointer.load(as: MultibootInfo.self)
     var offset:UInt32 = 8 // skip the 8-byte header
     loop: while offset < info.totalSize {
@@ -9,63 +9,63 @@ func initMultiboot2(infoPointer: UnsafeRawPointer) {
         let header = unsafe tagPointer.load(as: MultibootTagHeader.self)
         switch header.type {
         case 0:
-            logger.log("Multiboot2: found end tag")
+            logger.log(staticString: "Multiboot2: found end tag")
         case 1:
-            logger.log("Multiboot2: found boot command line tag")
+            logger.log(staticString: "Multiboot2: found boot command line tag")
         case 2:
-            logger.log("Multiboot2: found boot loader name tag")
+            logger.log(staticString: "Multiboot2: found boot loader name tag")
         case 3:
-            logger.log("Multiboot2: found modules tag")
+            logger.log(staticString: "Multiboot2: found modules tag")
         case 4:
-            logger.log("Multiboot2: found basic memory information tag")
+            logger.log(staticString: "Multiboot2: found basic memory information tag")
         case 5:
-            logger.log("Multiboot2: found BIOS boot device tag")
+            logger.log(staticString: "Multiboot2: found BIOS boot device tag")
         case 6:
-            logger.log("Multiboot2: found memory map tag; loading...")
+            logger.log(staticString: "Multiboot2: found memory map tag; loading...")
             unsafe loadMemoryMapTag(tagPointer: tagPointer)
-            logger.log("Multiboot2: memory map tag loaded")            
+            logger.log(staticString: "Multiboot2: memory map tag loaded")            
         case 7:
-            logger.log("Multiboot2: found VBE tag")
+            logger.log(staticString: "Multiboot2: found VBE tag")
         case 8:
-            logger.log("Multiboot2: found framebuffer tag")
+            logger.log(staticString: "Multiboot2: found framebuffer tag")
             //let fb = unsafe FramebufferTag(tagPointer: tagPointer)
             //fb.drawStatus()
         case 9:
-            logger.log("Multiboot2: found elf symbols tag")
+            logger.log(staticString: "Multiboot2: found elf symbols tag")
         case 10:
-            logger.log("Multiboot2: found APM table tag")
+            logger.log(staticString: "Multiboot2: found APM table tag")
         case 11:
-            logger.log("Multiboot2: found EFI 32-bit system table pointer tag")
+            logger.log(staticString: "Multiboot2: found EFI 32-bit system table pointer tag")
         case 12:
-            logger.log("Multiboot2: found EFI 64-bit system table pointer tag")
+            logger.log(staticString: "Multiboot2: found EFI 64-bit system table pointer tag")
         case 13:
-            logger.log("Multiboot2: found SMBIOS tag")
+            logger.log(staticString: "Multiboot2: found SMBIOS tag")
         case 14:
-            logger.log("Multiboot2: found ACPI old RSDP tag")
+            logger.log(staticString: "Multiboot2: found ACPI old RSDP tag")
             unsafe setupACPI(rsdpAddress: tagPointer.advanced(by: 8))
         case 15:
-            logger.log("Multiboot2: found ACPI new RSDP tag")
+            logger.log(staticString: "Multiboot2: found ACPI new RSDP tag")
             unsafe setupACPI(rsdpAddress: tagPointer.advanced(by: 8))
         case 16:
-            logger.log("Multiboot2: found networking information tag")
+            logger.log(staticString: "Multiboot2: found networking information tag")
         case 17:
-            logger.log("Multiboot2: found EFI memory map tag")
+            logger.log(staticString: "Multiboot2: found EFI memory map tag")
         case 18:
-            logger.log("Multiboot2: found EFI boot services not terminated tag")
+            logger.log(staticString: "Multiboot2: found EFI boot services not terminated tag")
         case 19:
-            logger.log("Multiboot2: found EFI 32-bit image handler pointer tag")
+            logger.log(staticString: "Multiboot2: found EFI 32-bit image handler pointer tag")
         case 20:
-            logger.log("Multiboot2: found EFI 64-bit image handler pointer tag")
+            logger.log(staticString: "Multiboot2: found EFI 64-bit image handler pointer tag")
         case 21:
-            logger.log("Multiboot2: found Image load base physical address tag")
+            logger.log(staticString: "Multiboot2: found Image load base physical address tag")
         default:
-            logger.log("Multiboot2: found unhandled tag")
+            logger.log(staticString: "Multiboot2: found unhandled tag")
             break loop
         }
         // tags are 8-byte aligned!
         offset += (header.size + 7) & ~7
     }
-    logger.log("Multiboot2: initialized")
+    logger.log(staticString: "Multiboot2: initialized")
 }
 
 
@@ -89,14 +89,14 @@ private func loadMemoryMapTag(tagPointer: UnsafeRawPointer) {
             }
             let heapSize = entryEnd - heapStart
             if heapSize > 1024 * 1024 * 10 { // 10MiB minimum
-                logger.log("Multiboot2: loadMemoryTag: found enough memory to setup KernelHeap")
+                logger.log(staticString: "Multiboot2: loadMemoryTag: found enough memory to setup KernelHeap")
                 let heapStartPointer = unsafe UnsafeMutableRawPointer(bitPattern: UInt(heapStart))!
                 unsafe KernelHeap.shared.load(
                     startAddress: heapStartPointer,
                     size: heapSize
                 )
             } else {
-                logger.log("Multiboot2: loadMemoryTag: failed to load KernelHeap")
+                logger.log(staticString: "Multiboot2: loadMemoryTag: failed to load KernelHeap")
             }
         default:
             break
@@ -107,30 +107,30 @@ private func loadMemoryMapTag(tagPointer: UnsafeRawPointer) {
 
 // MARK: Setup ACPI
 private func setupACPI(rsdpAddress: UnsafeRawPointer) {
-    logger.log("Multiboot2: setupACPI: executing...")
+    logger.log(staticString: "Multiboot2: setupACPI: executing...")
     // check validity; "RSD PTR " in hex (little endian) = 0x2052545020445352
     let signature = unsafe rsdpAddress.assumingMemoryBound(to: UInt64.self).pointee
     guard signature == 0x2052545020445352 else {
-        logger.log("Multiboot2: setupACPI: Invalid RSDP signature")
+        logger.log(staticString: "Multiboot2: setupACPI: Invalid RSDP signature")
         return
     }
     let revision = unsafe rsdpAddress.load(fromByteOffset: 15, as: UInt8.self)
     var madt:UnsafePointer<MADTTable>? = nil
     if revision == 0 {
-        logger.log("Multiboot2: setupACPI: Version 1.0 detected")
+        logger.log(staticString: "Multiboot2: setupACPI: Version 1.0 detected")
         let rsdtAddress = unsafe rsdpAddress.load(fromByteOffset: 16, as: UInt32.self)
         unsafe madt = madtFind(rsdtAddress: UInt64(rsdtAddress))
     } else {
-        logger.log("Multiboot2: setupACPI: Version 2.0+ detected")
+        logger.log(staticString: "Multiboot2: setupACPI: Version 2.0+ detected")
         let xsdtAddress = unsafe rsdpAddress.load(fromByteOffset: 24, as: UInt64.self)
         unsafe madt = madtFind(rsdtAddress: xsdtAddress)
     }
     guard let madt = unsafe madt else {
-        logger.log("Multiboot2: setupACPI: Could not find MADT table")
+        logger.log(staticString: "Multiboot2: setupACPI: Could not find MADT table")
         return
     }
     if let ioapicAddress = unsafe madtParse(madt: madt) {
-        unsafe IOAPIC.shared.initialize(baseAddress: UInt(ioapicAddress))
+        IOAPIC.initialize(baseAddress: UInt(ioapicAddress))
     }
-    logger.log("Multiboot2: setupACPI: executed")
+    logger.log(staticString: "Multiboot2: setupACPI: executed")
 }
