@@ -24,7 +24,7 @@ extension KernelScheduler {
             }
             while let keyEvent = unsafe keyboardBuffer.pop() {
                 logger.logRaw(staticString: "KernelScheduler: keyboard key=")
-                //logger.logRaw(string: keyEvent.key.name)
+                logger.logRaw(staticString: keyEvent.key.name)
                 logger.logRaw(staticString: ";pressed=")
                 if keyEvent.pressed {
                     logger.logRaw(staticString: "true")

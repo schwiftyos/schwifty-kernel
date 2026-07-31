@@ -2,9 +2,9 @@
 let logger = KernelLogger()
 
 struct KernelLogger {
-    func logRaw(_ char: ASCII) {
+    func logRaw(_ ascii: ASCII) {
         #if Log
-        UART.putASCII(char)
+        UART.putASCII(ascii)
         #endif
     }
 }
